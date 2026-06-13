@@ -33,3 +33,8 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# local test artifacts
+.playwright-mcp/
+timeline-verified.png
+*-verified.png

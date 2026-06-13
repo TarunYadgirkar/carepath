@@ -5,6 +5,7 @@ import type { OrbStatus } from "@/components/VoiceOrb";
 import { speakGrokTts, stopGrokTts } from "@/lib/grok-tts";
 import { buildEpicContext, getEpicImport } from "@/lib/epic-import";
 import { buildMedCardContext, getMedCard } from "@/lib/medcard";
+import { buildSymptomLogContext, getSymptomLog } from "@/lib/symptom-log";
 import type { ConversationMode } from "@/lib/mode-prompts";
 
 export type ConversationStatus = OrbStatus;
@@ -174,7 +175,10 @@ export function useVoiceConversation(
           body: JSON.stringify({
             messages: updated,
             mode,
-            medContext: buildMedCardContext(getMedCard()) + buildEpicContext(getEpicImport()),
+            medContext:
+              buildMedCardContext(getMedCard()) +
+              buildEpicContext(getEpicImport()) +
+              buildSymptomLogContext(getSymptomLog()),
           }),
         });
         const data: ConversationReply = await res.json();

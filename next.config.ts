@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   async headers() {
+    // React dev mode requires eval() for RSC hydration; production never does.
+    const scriptSrc =
+      process.env.NODE_ENV === "production"
+        ? "script-src 'self' 'unsafe-inline'"
+        : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
     return [
       {
         source: "/(.*)",
@@ -10,12 +15,12 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'",
+              scriptSrc,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
               "media-src 'self' blob:",
               "font-src 'self'",
-              "connect-src 'self' https://api.x.ai wss://api.x.ai https://api.openai.com",
+              "connect-src 'self' https: wss:",
               "frame-ancestors 'none'",
               "object-src 'none'",
               "base-uri 'self'",

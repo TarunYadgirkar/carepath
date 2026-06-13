@@ -35,6 +35,13 @@ const MODES = [
     sub: "A short voice check-in. CarePath notes what to bring up with your provider.",
     accent: "amber" as const,
   },
+  {
+    href: "/timeline",
+    badge: "Ongoing",
+    headline: "Symptom timeline",
+    sub: "Log symptoms and events over time. Your history feeds directly into triage.",
+    accent: "green" as const,
+  },
 ];
 
 export default function Home() {

@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { AudioPlaybackQueue, startAudioCapture, type AudioCapture } from "@/lib/audio";
 import { buildEpicContext, getEpicImport } from "@/lib/epic-import";
 import { buildMedCardContext, getMedCard } from "@/lib/medcard";
+import { buildSymptomLogContext, getSymptomLog } from "@/lib/symptom-log";
 import { VOICE_INSTRUCTIONS, type ConversationMode } from "@/lib/mode-prompts";
 
 export type VoiceStatus = "idle" | "connecting" | "active" | "ended" | "error";
@@ -79,6 +80,7 @@ export function useGrokVoice(
                 VOICE_INSTRUCTIONS[mode] +
                 buildMedCardContext(getMedCard()) +
                 buildEpicContext(getEpicImport()) +
+                buildSymptomLogContext(getSymptomLog()) +
                 (insurancePlanName
                   ? `\n\nThe patient's insurance plan is: ${insurancePlanName}. Use this for any cost-related context.`
                   : ""),

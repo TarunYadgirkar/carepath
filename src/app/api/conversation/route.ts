@@ -3,9 +3,9 @@ import OpenAI from "openai";
 import { CONVERSATION_SYSTEM_PROMPTS, GREETINGS, type ConversationMode } from "@/lib/mode-prompts";
 
 const VALID_MODES = new Set<ConversationMode>(["triage", "debrief", "medcard", "signal"]);
-const MAX_MESSAGES = 25;
-const MAX_MESSAGE_CONTENT = 4000;
-const MAX_MED_CONTEXT = 1500;
+const MAX_MESSAGES = 60;
+const MAX_MESSAGE_CONTENT = 8000;
+const MAX_MED_CONTEXT = 4000;
 
 interface ConversationMessage {
   role: "user" | "assistant";

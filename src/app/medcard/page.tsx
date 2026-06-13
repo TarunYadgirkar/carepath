@@ -9,6 +9,7 @@ import { VoiceConversationPanel } from "@/components/voice/VoiceConversationPane
 import { MedCardResultView } from "@/components/medcard/MedCardResultView";
 import { DownloadMedCardButton } from "@/components/medcard/DownloadMedCardButton";
 import { ConnectHealthRecordsButton } from "@/components/epic/ConnectHealthRecordsButton";
+import { PillBottleScanner } from "@/components/medcard/PillBottleScanner";
 
 export default function MedCardPage() {
   const [classifying, setClassifying] = useState(false);
@@ -88,6 +89,17 @@ export default function MedCardPage() {
               </div>
             }
           />
+
+          <div className="w-full max-w-md">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" aria-hidden="true" />
+              <span className="text-xs font-medium uppercase tracking-widest text-zinc-400">
+                or scan a pill bottle
+              </span>
+              <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" aria-hidden="true" />
+            </div>
+            <PillBottleScanner />
+          </div>
         </>
       )}
 

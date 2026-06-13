@@ -201,9 +201,9 @@ export async function POST(req: NextRequest) {
   const insurancePlan: string = body?.insurancePlan ?? DEFAULT_PLAN_KEY;
   const rawMode: unknown = body?.mode ?? "triage";
 
-  if (typeof transcript !== "string" || transcript.length > 8000) {
+  if (typeof transcript !== "string" || transcript.length > 16000) {
     return NextResponse.json(
-      { error: "transcript must be a string of at most 8000 characters" },
+      { error: "transcript must be a string of at most 16000 characters" },
       { status: 400 }
     );
   }

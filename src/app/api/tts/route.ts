@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CAREPATH_VOICE_SETTINGS } from "@/data/voice-settings";
 
-const MAX_TEXT_LENGTH = 1000;
+const MAX_TEXT_LENGTH = 4000;
 
 const ALLOWED_VOICE_IDS = new Set<string>([CAREPATH_VOICE_SETTINGS.ttsVoiceId]);
 const ALLOWED_LANGUAGES = new Set<string>([CAREPATH_VOICE_SETTINGS.ttsLanguage]);
