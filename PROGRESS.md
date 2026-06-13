@@ -162,7 +162,8 @@
 
 ## Known Issues / Blockers
 
-- **Local `XAI_API_KEY` invalid.** `curl https://api.x.ai/v1/models -H "Authorization: Bearer $XAI_API_KEY"` returns `{"code":"unauthenticated:bad-credentials"}` with the key in `.env.local`. Cannot verify the `grok-voice-think-fast-1.1` model name or test the live voice path locally. The Vercel-configured key may differ — test live voice (`DEMO_MODE = false` in `src/app/intake/page.tsx`) against the deployed app. If the model name is rejected, fall back to `grok-2-realtime` and drop `reasoning_effort` (see Phase 0 notes).
+- **xAI Realtime Voice API not authorized for this account.** Key was rotated (2026-06-13) and is now valid for `/v1/models` (lists `grok-4.20-*`, `grok-4.3`, `grok-build-0.1`, `grok-imagine-*` — no realtime/voice models in the list). `POST /v1/realtime/sessions` returns `403 {"code":"...","error":"Team is not authorized to perform this action."}` for **both** `grok-voice-think-fast-1.1` and the `grok-2-realtime` fallback — same error for both models, so this is an account/team permission gap (Realtime Voice API not enabled), not a wrong model name. Live Grok Voice (`useGrokVoice`, `/api/realtime-token`) cannot work until xAI enables Realtime API access on this team. Demo mode (`DEMO_MODE = true`) remains the reliable path for the hackathon demo.
+- **OpenAI key verified working** (rotated 2026-06-13): `GET /v1/models/gpt-4o-mini` returns 200. `/api/classify` real pipeline confirmed working on Vercel production.
 
 ```
 [BLOCKER TEMPLATE]
