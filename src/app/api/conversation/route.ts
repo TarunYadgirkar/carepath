@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 25_000, maxRetries: 1 });
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
+      temperature: 0,
       response_format: { type: "json_object" },
       max_tokens: 400,
       messages: [
