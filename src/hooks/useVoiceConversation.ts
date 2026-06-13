@@ -18,9 +18,11 @@ interface ConversationReply {
 
 interface SpeechRecognitionResultLike {
   0: { transcript: string };
+  isFinal: boolean;
 }
 
 interface SpeechRecognitionEventLike extends Event {
+  resultIndex: number;
   results: ArrayLike<SpeechRecognitionResultLike>;
 }
 
@@ -60,6 +62,7 @@ interface UseVoiceConversationResult {
   status: ConversationStatus;
   error: string | null;
   messages: ConversationMessage[];
+  interimTranscript: string;
   start: () => void;
   stop: () => void;
 }
@@ -68,10 +71,12 @@ export function useVoiceConversation(onDone: (summary: string) => void): UseVoic
   const [status, setStatus] = useState<ConversationStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [interimTranscript, setInterimTranscript] = useState("");
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const messagesRef = useRef<ConversationMessage[]>([]);
   const activeRef = useRef(false);
+  const turnHandledRef = useRef(false);
 
   const cleanup = useCallback(() => {
     activeRef.current = false;
@@ -95,22 +100,27 @@ export function useVoiceConversation(onDone: (summary: string) => void): UseVoic
 
     setError(null);
     setMessages([]);
+    setInterimTranscript("");
     messagesRef.current = [];
     activeRef.current = true;
 
     const recognition = new Ctor();
     recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.lang = "en-US";
     recognitionRef.current = recognition;
 
     const listenOnce = () => {
       if (!activeRef.current) return;
+      turnHandledRef.current = false;
+      setInterimTranscript("");
       setStatus("listening");
       recognition.start();
     };
 
     const handleUserTurn = async (transcript: string) => {
+      turnHandledRef.current = true;
+      setInterimTranscript("");
       const updated: ConversationMessage[] = [...messagesRef.current, { role: "user", content: transcript }];
       messagesRef.current = updated;
       setMessages(updated);
@@ -153,13 +163,23 @@ export function useVoiceConversation(onDone: (summary: string) => void): UseVoic
     };
 
     recognition.onresult = (event) => {
-      const last = event.results[event.results.length - 1];
-      const transcript = last?.[0]?.transcript.trim();
-      if (!transcript) {
-        if (activeRef.current) listenOnce();
-        return;
+      let finalTranscript = "";
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result[0]?.transcript ?? "";
+        if (result.isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interim += transcript;
+        }
       }
-      void handleUserTurn(transcript);
+
+      if (finalTranscript.trim()) {
+        void handleUserTurn(finalTranscript.trim());
+      } else {
+        setInterimTranscript(interim);
+      }
     };
 
     recognition.onerror = (event) => {
@@ -168,16 +188,18 @@ export function useVoiceConversation(onDone: (summary: string) => void): UseVoic
         setError("Microphone access is blocked. Allow it in your browser settings and try again.");
         setStatus("error");
         cleanup();
-        return;
       }
-      listenOnce();
+      // Non-fatal errors (no-speech, aborted, network) fall through to
+      // onend, which restarts listening if no turn was handled.
     };
 
-    recognition.onend = null;
+    recognition.onend = () => {
+      if (activeRef.current && !turnHandledRef.current) listenOnce();
+    };
 
     setStatus("connecting");
     listenOnce();
   }, [cleanup, onDone]);
 
-  return { status, error, messages, start, stop };
+  return { status, error, messages, interimTranscript, start, stop };
 }

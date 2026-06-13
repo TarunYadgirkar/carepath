@@ -38,7 +38,7 @@ export default function IntakePage() {
     [router]
   );
 
-  const { status, error, messages, start, stop } = useVoiceConversation(classify);
+  const { status, error, messages, interimTranscript, start, stop } = useVoiceConversation(classify);
 
   const runDemo = useCallback(async () => {
     setDemoTranscript(null);
@@ -87,6 +87,12 @@ export default function IntakePage() {
         )}
 
         {error && <p className="text-sm text-red-500">{error}</p>}
+
+        {status === "listening" && (
+          <p className="min-h-[1.25rem] text-sm text-zinc-500" role="status">
+            {interimTranscript || "Listening for your voice…"}
+          </p>
+        )}
 
         {messages.length > 0 && (
           <div className="flex w-full flex-col gap-2 text-sm">

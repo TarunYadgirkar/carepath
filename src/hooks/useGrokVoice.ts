@@ -78,7 +78,6 @@ export function useGrokVoice(
               modalities: ["text", "audio"],
               instructions: INTAKE_INSTRUCTIONS,
               voice: "Eve",
-              reasoning_effort: "high",
               input_audio_format: "pcm16",
               output_audio_format: "pcm16",
               turn_detection: {
