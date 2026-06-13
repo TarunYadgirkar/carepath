@@ -9,7 +9,7 @@ import { CommunitySuggestions } from "./CommunitySuggestions";
 
 export function CareCardView({ result }: { result: CarePathResult }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
       {/* 1 — Hero: care level + confidence (3-second rule: must dominate) */}
       <div className="animate-fade-up stagger-1">
         <CareLevelHeader

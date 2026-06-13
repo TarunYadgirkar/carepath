@@ -99,7 +99,7 @@ export function VoiceConversationPanel({
       <EmergencyBanner show={showEmergencyBanner} />
 
       <section
-        className="flex w-full max-w-xl flex-col items-center gap-6 rounded-2xl p-6 ring-1"
+        className="mx-auto flex w-full max-w-xl flex-col items-center gap-6 rounded-2xl p-6 ring-1"
         style={{
           background: "var(--surface)",
           borderColor: "var(--border)",
@@ -293,7 +293,7 @@ export function VoiceConversationPanel({
 
       {demoSlot && !conversationActive && (
         <div
-          className="flex w-full max-w-xl items-center gap-3 text-xs"
+          className="mx-auto flex w-full max-w-xl items-center gap-3 text-xs"
           style={{ color: "var(--text-subtle)" }}
         >
           <span className="h-px flex-1" style={{ background: "var(--border)" }} />
