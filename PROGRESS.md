@@ -14,7 +14,7 @@
 
 | Field | Value |
 |---|---|
-| **Current Phase** | Phase 7 — Done (Grok Realtime Voice fixed + wired as primary) |
+| **Current Phase** | Phase 8 — Done (Site essentials: footer, 404, metadata, Care Card reset) |
 | **Last Updated** | 2026-06-13 |
 | **Last Tool Used** | Cursor |
 | **Vercel URL** | https://carepath-five.vercel.app |
@@ -244,6 +244,24 @@ Browser mic → AudioWorklet/ScriptProcessor (PCM16 24kHz) → wss://api.x.ai/v1
 **Do NOT:**
 - Commit `.env.local`
 - Modify `src/types/carepath.ts` without updating this file
+
+---
+
+### Phase 8 — Site Essentials + Care Card Reset ⏱ ~15 min
+*Goal: Standard site chrome (footer, 404, metadata) + a way to clear a saved Care Card and start over.*
+
+- [x] `src/components/SiteFooter.tsx` — new footer component with safety tagline + copyright, rendered site-wide via `src/app/layout.tsx`
+- [x] `src/app/layout.tsx` — added `SiteFooter`, added `viewport` export (theme-color light/dark), expanded `metadata` with `applicationName` + Open Graph fields
+- [x] `src/app/not-found.tsx` — new custom 404 page (matches site styling, links back to `/`)
+- [x] `src/lib/care-result-storage.ts` — added `clearCareResult()` (removes `"carepath:result"` from localStorage)
+- [x] `src/app/card/page.tsx` — added "Start New Conversation" button that calls `clearCareResult()` then routes to `/intake`
+- [x] `npm run type-check` and `npm run build` both pass clean
+
+**Status:** Done.
+
+**Notes:**
+- Care Card data persists in localStorage until the user explicitly taps "Start New Conversation" — a plain reload does NOT clear it (by design, so a judge/demo can refresh without losing the card). If the requirement is "reload always resets", that would mean removing `localStorage` persistence entirely (revert to in-memory only) — flag with the user before doing that, since it would break the "refresh-safe Care Card" behavior.
+- Favicon/public assets are still the default Next.js scaffold (`src/app/favicon.ico`, `public/*.svg`) — not addressed, low priority for hackathon demo.
 
 ---
 

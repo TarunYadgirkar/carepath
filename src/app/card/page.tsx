@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { CarePathResult } from "@/types/carepath";
-import { loadCareResult } from "@/lib/care-result-storage";
+import { clearCareResult, loadCareResult } from "@/lib/care-result-storage";
 import { SafetyDisclaimer } from "@/components/SafetyDisclaimer";
 import { CareLevelHeader } from "@/components/care-card/CareLevelHeader";
 import { ListSection } from "@/components/care-card/ListSection";
@@ -13,11 +14,17 @@ import { MedCard } from "@/components/care-card/MedCard";
 import { CheckInScript } from "@/components/care-card/CheckInScript";
 
 export default function CarePage() {
+  const router = useRouter();
   const [result, setResult] = useState<CarePathResult | null | undefined>(undefined);
 
   useEffect(() => {
     setResult(loadCareResult());
   }, []);
+
+  const startNewConversation = () => {
+    clearCareResult();
+    router.push("/intake");
+  };
 
   if (result === undefined) {
     return null;
@@ -61,6 +68,15 @@ export default function CarePage() {
       <CheckInScript script={result.whatToSayAtCheckIn} />
       <ListSection title="Questions to ask" items={result.questionsToAsk} />
       <ListSection title="What to bring" items={result.whatToBring} />
+
+      <div className="flex justify-center py-2">
+        <button
+          onClick={startNewConversation}
+          className="rounded-full border border-current px-6 py-3 text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95"
+        >
+          Start New Conversation
+        </button>
+      </div>
 
       <div className="flex justify-center py-4">
         <SafetyDisclaimer />

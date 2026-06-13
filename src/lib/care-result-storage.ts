@@ -16,3 +16,7 @@ export function loadCareResult(): CarePathResult | null {
     return null;
   }
 }
+
+export function clearCareResult(): void {
+  localStorage.removeItem(STORAGE_KEY);
+}

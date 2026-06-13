@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,6 +17,21 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CarePath",
   description: "Voice-first patient navigation to your next care step.",
+  applicationName: "CarePath",
+  openGraph: {
+    title: "CarePath",
+    description: "Voice-first patient navigation to your next care step.",
+    type: "website",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
 };
 
 export default function RootLayout({
@@ -31,6 +47,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <SiteHeader />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );
