@@ -14,7 +14,7 @@
 
 | Field | Value |
 |---|---|
-| **Current Phase** | Phase 4 — In progress |
+| **Current Phase** | Phase 5 — Done |
 | **Last Updated** | 2026-06-13 |
 | **Last Tool Used** | Claude Code |
 | **Vercel URL** | https://carepath-five.vercel.app |
@@ -133,6 +133,25 @@
 - `npm run type-check` and `npm run build` both pass.
 - Verified via Playwright MCP: landing page renders new hero/steps, `/intake` demo button → loading overlay → `/card` (Urgent Care result) all render correctly.
 - Live-voice branch (`VoiceOrb` + start/stop) is implemented but still gated behind `DEMO_MODE = true` — untested live since `XAI_API_KEY` is invalid locally (see Known Issues).
+
+---
+
+### Phase 5 — Real-Time Live Conversation (Browser Voice) ⏱ ~45 min
+*Goal: A working live, real-time conversation path beyond the demo transcript, given xAI Realtime is account-blocked.*
+
+**Status:** Done.
+
+**What was built:**
+- `src/app/api/conversation/route.ts` — new POST route. First call (empty `messages`) returns a fixed greeting without an OpenAI call. Subsequent calls send the running message history to `gpt-4o-mini` (`response_format: json_object`) with a system prompt that asks short, one-at-a-time intake questions and returns `{ reply, done, summary }`. `summary` is a `Patient:`/`CarePath:` transcript-style string fed straight into `/api/classify`. Missing `OPENAI_API_KEY` or any parse error returns a graceful `done: true` fallback reply instead of a 500.
+- `src/hooks/useVoiceConversation.ts` — new client hook using browser-native Web Speech API: `SpeechRecognition`/`webkitSpeechRecognition` for STT, `speechSynthesis`/`SpeechSynthesisUtterance` for TTS. Conversation loop: listen → POST `/api/conversation` → speak reply → either listen again or (if `done`) call `onDone(summary)`. Handles `not-allowed`/`audio-capture`/`service-not-allowed` mic errors as fatal (surfaces a clear error message), retries on recoverable errors (e.g. `no-speech`). Exposes `isVoiceConversationSupported()` for feature detection.
+- `src/components/VoiceOrb.tsx` — extended `VoiceStatus` → new exported `OrbStatus` union (`idle`/`connecting`/`active`/`listening`/`thinking`/`speaking`/`ended`/`error`) with per-status labels and pulse/spinner animation groups.
+- `src/app/intake/page.tsx` — rebuilt: primary "Live conversation" card (VoiceOrb + Start/End button + live chat-bubble transcript of patient/CarePath turns), with a "Demo mode" section below as a fallback/secondary path. Feature-detects voice support client-side (`useEffect`) to avoid SSR/client mismatch; disables the live button and shows a browser-compatibility note when unsupported.
+- Removed the `DEMO_MODE` flag and the `useGrokVoice` import from `/intake` — `useGrokVoice.ts`/`/api/realtime-token` remain in the repo unused, ready to be wired back in if xAI enables Realtime API access for this account.
+
+**Notes / Blockers:**
+- `npm run type-check` and `npm run build` both pass.
+- Verified via Playwright: `/intake` renders the new live-conversation card + demo section; demo path still completes end-to-end to `/card` (`Urgent Care`, medium confidence).
+- Live conversation itself (mic capture + speech recognition) requires a real browser with mic permission — not exercisable headlessly. Requires Chrome/Edge (Web Speech API support); Firefox/Safari fall back to the demo with an inline note.
 
 ---
 

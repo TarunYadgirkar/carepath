@@ -12,7 +12,7 @@ CarePath is a voice-first patient navigation assistant for people who don't know
 
 ## What It Does
 
-1. **Voice conversation** — Speak naturally about symptoms, medications, and concerns. Powered by Grok Voice (xAI Realtime API).
+1. **Voice conversation** — Speak naturally about symptoms, medications, and concerns. Live conversation runs in-browser (Web Speech API) with a `gpt-4o-mini` conversational backend; a demo mode (preloaded transcript) is also available.
 2. **Care triage** — Recommends the right level of care: self-monitoring, telehealth, primary care, urgent care, or ER — with visible reasoning.
 3. **Cost clarity** — Estimates cost for each care option using your insurance context.
 4. **Care Card** — Generates a shareable card with your care path, risk signals, what to say at check-in, red flags, and questions to ask.
@@ -31,8 +31,8 @@ Autonomous Healthcare Hackathon — Legion Health × Atlas AI — June 13, 2026
 
 - **Framework:** Next.js 14+ (App Router, TypeScript)
 - **Styling:** Tailwind CSS
-- **Voice:** Grok Voice (xAI Realtime API)
-- **AI extraction:** Claude API (Anthropic)
+- **Voice:** Web Speech API (browser-native STT/TTS) for live conversation; Grok Voice (xAI Realtime API) integration present but blocked pending account access
+- **AI extraction:** OpenAI API (`gpt-4o-mini`)
 - **Deployment:** Vercel
 
 ---
@@ -45,7 +45,7 @@ npm install
 
 # Copy environment variables
 cp .env.example .env.local
-# Fill in XAI_API_KEY and ANTHROPIC_API_KEY
+# Fill in OPENAI_API_KEY (XAI_API_KEY optional — Grok Voice path is currently blocked)
 
 # Start dev server
 npm run dev
