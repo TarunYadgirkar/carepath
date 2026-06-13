@@ -29,7 +29,7 @@
 
 - [x] `/app/api/realtime-token/route.ts` — POST route that calls xAI and returns ephemeral token
 - [x] `/app/intake/page.tsx` — Basic voice conversation screen (WebSocket connected, transcript appears)
-- [ ] Grok Voice speaking back (say something, AI responds) — UNTESTED, needs `XAI_API_KEY` + live mic
+- [ ] Grok Voice speaking back — BLOCKED, xAI account not authorized for Realtime API (403 on all model names, confirmed 2026-06-13). Superseded by Phase 5 browser-voice live conversation.
 - [x] Fallback demo mode toggle — `DEMO_MODE = true` in `/app/intake/page.tsx`, loads `src/mocks/demo-transcript.ts`
 - [x] Fallback mode routes to `/api/classify` with mock transcript and displays raw JSON
 
@@ -181,7 +181,7 @@
 
 ## Known Issues / Blockers
 
-- **xAI Realtime Voice API not authorized for this account.** Key was rotated (2026-06-13) and is now valid for `/v1/models` (lists `grok-4.20-*`, `grok-4.3`, `grok-build-0.1`, `grok-imagine-*` — no realtime/voice models in the list). `POST /v1/realtime/sessions` returns `403 {"code":"...","error":"Team is not authorized to perform this action."}` for **both** `grok-voice-think-fast-1.1` and the `grok-2-realtime` fallback — same error for both models, so this is an account/team permission gap (Realtime Voice API not enabled), not a wrong model name. Live Grok Voice (`useGrokVoice`, `/api/realtime-token`) cannot work until xAI enables Realtime API access on this team. Demo mode (`DEMO_MODE = true`) remains the reliable path for the hackathon demo.
+- **xAI Realtime Voice API not authorized for this account.** Key was rotated (2026-06-13) and is now valid for `/v1/models` (lists `grok-4.20-0309-non-reasoning`, `grok-4.20-0309-reasoning`, `grok-4.20-multi-agent-0309`, `grok-4.3`, `grok-build-0.1`, `grok-imagine-*` — no realtime/voice models in the list). Re-checked 2026-06-13: `POST /v1/realtime/sessions` returns the identical `403 {"code":"The caller does not have permission to execute the specified operation","error":"Team is not authorized to perform this action."}` for **every** model tried — `grok-voice-think-fast-1.1`, `grok-2-realtime`, `grok-voice`, `grok-4.20-0309-reasoning`, `grok-4.3`. Same error regardless of model name = account/team permission gap (Realtime API not enabled on this team), not a model-naming issue. Live Grok Voice (`useGrokVoice`, `/api/realtime-token`) cannot work until xAI enables Realtime API access for this team — no code-side fix exists. **Resolved via Phase 5**: live conversation now uses the browser's Web Speech API + `gpt-4o-mini` instead, which works today without xAI Realtime.
 - **OpenAI key verified working** (rotated 2026-06-13): `GET /v1/models/gpt-4o-mini` returns 200. `/api/classify` real pipeline confirmed working on Vercel production.
 
 ```
@@ -212,9 +212,9 @@ Status: unresolved / resolved by [what]
 
 ## Environment Variables Status
 
-- [ ] `XAI_API_KEY` — set in Vercel environment variables
-- [ ] `OPENAI_API_KEY` — set in Vercel environment variables
-- [ ] `.env.local` — created locally from `.env.example`
+- [x] `XAI_API_KEY` — set in Vercel environment variables (valid for chat models; Realtime API account-blocked, see Known Issues)
+- [x] `OPENAI_API_KEY` — set in Vercel environment variables, verified working
+- [x] `.env.local` — created locally from `.env.example`
 
 ---
 
