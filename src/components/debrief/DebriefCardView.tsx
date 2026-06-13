@@ -65,7 +65,7 @@ export function DebriefCardView({ result }: { result: DebriefResult }) {
           className="text-xs font-semibold uppercase tracking-[0.15em]"
           style={{ color: "var(--text-subtle)" }}
         >
-          Recommended next step
+          Suggested next step
         </h2>
         <p className="mt-3 text-base leading-relaxed" style={{ color: "var(--text-primary)" }}>
           {result.recommendedNextStep}

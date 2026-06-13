@@ -71,7 +71,7 @@ export function CareLevelHeader({ careLevel, confidence, patientSummary }: Props
           {/* Confidence chip — visually subordinate */}
           <span
             className={`mt-[6px] rounded-full px-3 py-1 text-xs font-semibold tracking-wide ${CONFIDENCE_STYLES[confidence]}`}
-            aria-label={`AI confidence: ${CONFIDENCE_LABELS[confidence]}`}
+            aria-label={`Confidence level: ${CONFIDENCE_LABELS[confidence]}`}
           >
             {CONFIDENCE_LABELS[confidence]}
           </span>

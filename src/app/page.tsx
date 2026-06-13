@@ -66,7 +66,7 @@ const MODES = [
     href: "/timeline",
     badge: "Ongoing",
     headline: "Symptom timeline",
-    sub: "Log symptoms and events over time. Your history feeds directly into triage.",
+    sub: "Log symptoms and events over time. Your history is available when you run a check-in.",
     accent: "amber" as const,
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -83,7 +83,7 @@ const MODES = [
 const TRUST_SIGNALS = [
   { label: "Voice-first", desc: "Talk naturally — no forms to fill" },
   { label: "Private by design", desc: "Nothing leaves your device" },
-  { label: "Instant triage", desc: "Confidence-scored care direction" },
+  { label: "Clear next step", desc: "A ranked care option with cost estimate" },
 ];
 
 /* ── Page ────────────────────────────────────────────────────────────── */
@@ -105,16 +105,6 @@ export default function Home() {
       className="relative flex flex-1 flex-col items-center overflow-hidden"
       style={{ background: "var(--background)" }}
     >
-      {/* ── Atmospheric gradient ──────────────────────────────────────────── */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem]"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 60% at 50% -10%, var(--accent-soft) 0%, transparent 70%)",
-        }}
-      />
-
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section
         aria-labelledby="hero-heading"
@@ -144,8 +134,7 @@ export default function Home() {
           className="animate-fade-up stagger-3 mt-6 max-w-lg text-lg leading-relaxed"
           style={{ color: "var(--text-muted)" }}
         >
-          Describe your symptoms, meds, and insurance once. CarePath gives you a
-          confidence-scored care recommendation and cost estimate — instantly.
+          Describe your symptoms, meds, and insurance once. CarePath shows you where to go and what it may cost.
         </p>
 
         {/* CTA cluster */}
@@ -164,7 +153,7 @@ export default function Home() {
               <circle cx="8" cy="8" r="3" fill="currentColor" />
               <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5" opacity="0.5" />
             </svg>
-            Start voice triage
+            Describe your symptoms
           </Link>
 
           {/* Secondary: Epic connect */}
@@ -228,7 +217,7 @@ export default function Home() {
             What do you need today?
           </h2>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Each mode adapts to where you are in your care journey.
+            Choose what fits where you are right now.
           </p>
         </header>
 

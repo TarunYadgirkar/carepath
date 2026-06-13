@@ -204,8 +204,7 @@ function EmptyState() {
           No symptoms logged yet
         </p>
         <p className="mt-1.5 max-w-xs text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          Add your first entry above — your log feeds into triage automatically so you don&apos;t
-          have to repeat yourself.
+          Use the form above to log your first symptom or event.
         </p>
       </div>
     </div>
@@ -284,8 +283,8 @@ export default function TimelinePage() {
           Track how you feel
         </h1>
         <p className="mt-2.5 text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          Log symptoms and events over time — your history feeds into your voice triage session
-          automatically.
+          Log symptoms and events over time. Your history is available when you start a voice
+          session, so you don&apos;t have to repeat yourself.
         </p>
       </header>
 

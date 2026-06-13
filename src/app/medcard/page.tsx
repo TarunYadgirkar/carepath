@@ -62,8 +62,8 @@ export default function MedCardPage() {
           CarePath MedCard
         </h1>
         <p className="max-w-sm text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          Speak your medications, dosages, allergies, and conditions. CarePath checks for interactions
-          and builds a shareable card.
+          Speak your medications, dosages, allergies, and conditions. CarePath screens for potential
+          interactions and builds a shareable card.
         </p>
       </header>
 
@@ -182,7 +182,7 @@ export default function MedCardPage() {
         </div>
       )}
 
-      {classifying && <LoadingOverlay message="Checking your medications…" />}
+      {classifying && <LoadingOverlay message="Reviewing your medications…" />}
     </main>
   );
 }

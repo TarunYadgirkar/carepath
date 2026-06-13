@@ -68,7 +68,7 @@ export default function IntakePage() {
           CarePath Intake
         </h1>
         <p className="max-w-sm text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          Describe your symptoms naturally. CarePath will help you understand your next best step.
+          Describe what&apos;s going on. CarePath will suggest your next care step.
         </p>
       </div>
 

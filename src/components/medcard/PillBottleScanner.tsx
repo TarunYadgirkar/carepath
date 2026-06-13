@@ -179,8 +179,8 @@ export function PillBottleScanner() {
           Scan Pill Bottle
         </h2>
         <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          Point your camera at a pill bottle label — CarePath extracts the medication name,
-          dosage, and instructions for you.
+          Upload a photo of a pill bottle label. CarePath reads the medication name, dosage,
+          and instructions so you can confirm and save them.
         </p>
       </header>
 

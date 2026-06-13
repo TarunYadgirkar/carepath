@@ -54,7 +54,7 @@ export default function CarePage() {
             No Care Card yet
           </h1>
           <p className="max-w-sm text-base leading-relaxed" style={{ color: "var(--text-muted)" }}>
-            Start an intake conversation to generate your personalized Care Card.
+            Describe your symptoms in an intake conversation and CarePath will build your Care Card.
           </p>
         </div>
         <div className="animate-fade-up stagger-2">
@@ -66,7 +66,7 @@ export default function CarePage() {
               color: "var(--accent-contrast)",
             }}
           >
-            Go to Intake
+            Start intake
           </Link>
         </div>
       </main>
@@ -88,7 +88,7 @@ export default function CarePage() {
             background: "var(--surface)",
           }}
         >
-          Start New Conversation
+          Start new intake
         </button>
       </div>
 

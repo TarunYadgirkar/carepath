@@ -24,13 +24,13 @@ export function SignalCardView({ result }: { result: SignalResult }) {
       </section>
 
       <div className="animate-fade-up stagger-1">
-        <ListSection title="Themes noticed" items={result.themesNoticed} />
+        <ListSection title="Patterns in what you shared" items={result.themesNoticed} />
       </div>
       <div className="animate-fade-up stagger-2">
         <ListSection title="What to tell your provider" items={result.whatToTellYourProvider} />
       </div>
       <div className="animate-fade-up stagger-2">
-        <ListSection title="Positive observations" items={result.positiveObservations} />
+        <ListSection title="What's going well" items={result.positiveObservations} />
       </div>
       <div className="animate-fade-up stagger-3">
         <ListSection title="Questions to ask your provider" items={result.questionsToAsk} />

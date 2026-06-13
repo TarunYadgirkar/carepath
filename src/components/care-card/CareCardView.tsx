@@ -20,7 +20,7 @@ export function CareCardView({ result }: { result: CarePathResult }) {
 
       {/* 2 — AI reasoning: visible, not hidden behind a toggle */}
       <div className="animate-fade-up stagger-2">
-        <ListSection title="AI Reasoning" items={result.reasoning} />
+        <ListSection title="Why this recommendation" items={result.reasoning} />
       </div>
 
       {/* 3 — Risk signals: prominent, scannable tags */}

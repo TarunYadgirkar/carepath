@@ -25,12 +25,12 @@ const STATUS_LABEL: Record<OrbStatus, string> = {
 
 const STATUS_SUBLABEL: Record<OrbStatus, string | null> = {
   idle: "Tap to start",
-  connecting: "Establishing a secure connection",
+  connecting: "Establishing connection",
   active: "Speak naturally",
   listening: "Speak naturally",
   thinking: "Processing your symptoms",
   speaking: "CarePath is responding",
-  ended: "Your care card is ready",
+  ended: "Analyzing your conversation…",
   error: "Check your microphone and try again",
 };
 
