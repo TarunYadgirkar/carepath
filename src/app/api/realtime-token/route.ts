@@ -11,16 +11,14 @@ export async function POST() {
     );
   }
 
-  const response = await fetch("https://api.x.ai/v1/realtime/sessions", {
+  const response = await fetch("https://api.x.ai/v1/realtime/client_secrets", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.XAI_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: GROK_REALTIME_MODEL,
-      voice: CAREPATH_VOICE_SETTINGS.realtimeVoice,
-    }),
+    // No model here — model goes in the WebSocket URL, not the token request
+    body: JSON.stringify({ expires_after: { seconds: 300 } }),
   });
 
   if (!response.ok) {
@@ -32,7 +30,7 @@ export async function POST() {
   }
 
   const data = await response.json();
-  const token = data.client_secret?.value ?? data.token;
+  const token = data.value;
 
   if (!token) {
     return NextResponse.json(

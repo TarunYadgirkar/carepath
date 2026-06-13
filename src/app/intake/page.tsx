@@ -3,12 +3,22 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isVoiceConversationSupported, useVoiceConversation } from "@/hooks/useVoiceConversation";
+import { useGrokVoice } from "@/hooks/useGrokVoice";
 import { DEMO_TRANSCRIPT } from "@/mocks/demo-transcript";
 import { saveCareResult } from "@/lib/care-result-storage";
 import { CAREPATH_VOICE_SETTINGS } from "@/data/voice-settings";
 import { SafetyDisclaimer } from "@/components/SafetyDisclaimer";
-import { VoiceOrb } from "@/components/VoiceOrb";
+import { VoiceOrb, type OrbStatus } from "@/components/VoiceOrb";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+
+function isGrokVoiceSupported(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof navigator !== "undefined" &&
+    Boolean(navigator.mediaDevices?.getUserMedia) &&
+    "AudioContext" in window
+  );
+}
 
 const STATUS_HINT: Record<string, string> = {
   connecting: "Connecting to CarePath…",
@@ -22,9 +32,12 @@ export default function IntakePage() {
   const [classifying, setClassifying] = useState(false);
   const [demoTranscript, setDemoTranscript] = useState<string | null>(null);
   const [voiceSupported, setVoiceSupported] = useState(false);
+  const [grokSupported, setGrokSupported] = useState(false);
+  const [useFallbackVoice, setUseFallbackVoice] = useState(false);
 
   useEffect(() => {
     setVoiceSupported(isVoiceConversationSupported());
+    setGrokSupported(isGrokVoiceSupported());
   }, []);
 
   const classify = useCallback(
@@ -46,8 +59,8 @@ export default function IntakePage() {
     [router]
   );
 
-  const { status, error, messages, interimTranscript, speakingText, start, stop } =
-    useVoiceConversation(classify);
+  const fallbackVoice = useVoiceConversation(classify);
+  const grokVoice = useGrokVoice(classify);
 
   const runDemo = useCallback(async () => {
     setDemoTranscript(null);
@@ -56,18 +69,32 @@ export default function IntakePage() {
     await classify(DEMO_TRANSCRIPT);
   }, [classify]);
 
+  const status: OrbStatus = useFallbackVoice
+    ? fallbackVoice.status
+    : grokVoice.status === "active"
+      ? "listening"
+      : grokVoice.status;
+
+  const error = useFallbackVoice ? fallbackVoice.error : grokVoice.error;
+  const start = useFallbackVoice ? fallbackVoice.start : grokVoice.start;
+  const stop = useFallbackVoice ? fallbackVoice.stop : grokVoice.stop;
+  const messages = useFallbackVoice ? fallbackVoice.messages : [];
+
   const conversationActive =
     status === "connecting" ||
     status === "listening" ||
     status === "thinking" ||
     status === "speaking";
 
-  const liveHint =
-    status === "listening" && interimTranscript
-      ? `You: ${interimTranscript}`
-      : status === "speaking" && speakingText
-        ? `CarePath: ${speakingText}`
-        : STATUS_HINT[status] ?? null;
+  const liveHint = useFallbackVoice
+    ? status === "listening" && fallbackVoice.interimTranscript
+      ? `You: ${fallbackVoice.interimTranscript}`
+      : status === "speaking" && fallbackVoice.speakingText
+        ? `CarePath: ${fallbackVoice.speakingText}`
+        : STATUS_HINT[status] ?? null
+    : grokVoice.patientTranscript || grokVoice.aiTranscript
+      ? null
+      : STATUS_HINT[status] ?? null;
 
   return (
     <main className="flex flex-1 flex-col items-center gap-6 px-6 py-12">
@@ -97,23 +124,35 @@ export default function IntakePage() {
         ) : (
           <button
             onClick={start}
-            disabled={!voiceSupported || classifying}
+            disabled={(useFallbackVoice ? !voiceSupported : !grokSupported) || classifying}
             className="rounded-full bg-[var(--accent)] px-6 py-3 font-medium text-white transition-transform duration-150 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
           >
             Start Live Conversation
           </button>
         )}
 
-        {!voiceSupported && (
+        {(useFallbackVoice ? !voiceSupported : !grokSupported) && (
           <p className="text-center text-sm text-zinc-500">
-            Live conversation needs a browser with speech recognition (Chrome or Edge) and microphone
-            access. CarePath replies use Grok Voice TTS. Try the demo below instead.
+            Live conversation needs a browser with microphone access (Chrome or Edge). Try the demo below
+            instead.
           </p>
         )}
 
         {error && <p className="text-sm text-red-500">{error}</p>}
 
-        {(conversationActive || messages.length > 0) && (
+        {!useFallbackVoice && (error || !grokSupported) && voiceSupported && !conversationActive && (
+          <button
+            onClick={() => setUseFallbackVoice(true)}
+            className="text-xs text-zinc-500 underline transition-colors hover:text-[var(--accent)]"
+          >
+            Grok Voice unavailable — switch to browser voice instead
+          </button>
+        )}
+
+        {(conversationActive ||
+          messages.length > 0 ||
+          grokVoice.patientTranscript ||
+          grokVoice.aiTranscript) && (
           <div
             className="flex w-full flex-col gap-3 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900"
             aria-live="polite"
@@ -127,23 +166,42 @@ export default function IntakePage() {
               </p>
             )}
 
-            {messages.length > 0 ? (
+            {useFallbackVoice ? (
+              messages.length > 0 ? (
+                <div className="flex max-h-64 flex-col gap-2 overflow-y-auto text-sm">
+                  {messages.map((message, i) => (
+                    <div
+                      key={i}
+                      className={`rounded-lg p-3 ${
+                        message.role === "user"
+                          ? "self-end bg-[var(--accent-soft)] text-right"
+                          : "self-start bg-white dark:bg-zinc-950"
+                      }`}
+                    >
+                      <p className="mb-1 text-xs font-medium text-zinc-500">
+                        {message.role === "user" ? "You" : "CarePath"}
+                      </p>
+                      <p className="whitespace-pre-wrap">{message.content}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-zinc-500">Transcript will appear here as you talk.</p>
+              )
+            ) : grokVoice.patientTranscript || grokVoice.aiTranscript ? (
               <div className="flex max-h-64 flex-col gap-2 overflow-y-auto text-sm">
-                {messages.map((message, i) => (
-                  <div
-                    key={i}
-                    className={`rounded-lg p-3 ${
-                      message.role === "user"
-                        ? "self-end bg-[var(--accent-soft)] text-right"
-                        : "self-start bg-white dark:bg-zinc-950"
-                    }`}
-                  >
-                    <p className="mb-1 text-xs font-medium text-zinc-500">
-                      {message.role === "user" ? "You" : "CarePath"}
-                    </p>
-                    <p className="whitespace-pre-wrap">{message.content}</p>
+                {grokVoice.patientTranscript && (
+                  <div className="self-end rounded-lg bg-[var(--accent-soft)] p-3 text-right">
+                    <p className="mb-1 text-xs font-medium text-zinc-500">You</p>
+                    <p className="whitespace-pre-wrap">{grokVoice.patientTranscript}</p>
                   </div>
-                ))}
+                )}
+                {grokVoice.aiTranscript && (
+                  <div className="self-start rounded-lg bg-white p-3 dark:bg-zinc-950">
+                    <p className="mb-1 text-xs font-medium text-zinc-500">CarePath</p>
+                    <p className="whitespace-pre-wrap">{grokVoice.aiTranscript}</p>
+                  </div>
+                )}
               </div>
             ) : (
               <p className="text-sm text-zinc-500">Transcript will appear here as you talk.</p>

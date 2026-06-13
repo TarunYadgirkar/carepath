@@ -9,10 +9,14 @@ const INTAKE_INSTRUCTIONS = `You are CarePath, a calm voice intake assistant. As
 questions one at a time to learn: the patient's main symptom and how long they've had it,
 whether they have any red-flag symptoms (trouble breathing, chest pain, confusion, severe
 bleeding, loss of consciousness), their current medications and allergies, and their
-insurance plan and remaining deductible if known. Keep responses brief. Once you have
-enough information, call the end_consultation function with a clean summary of what the
-patient said. You are a navigation tool, not a diagnosis system — never diagnose, and if
-the patient describes a clear emergency, tell them to call 911 immediately.`;
+insurance plan and remaining deductible if known.
+
+You have access to web_search. Use it proactively when the patient mentions a specific
+medication, diagnosis, or condition you want to verify — search before giving any
+information about it. Keep spoken responses brief (1-2 sentences). Once you have enough
+information, call the end_consultation function with a clean summary of what the patient
+said. You are a navigation tool, not a diagnosis system — never diagnose, and if the
+patient describes a clear emergency, tell them to call 911 immediately.`;
 
 interface UseGrokVoiceResult {
   status: VoiceStatus;
@@ -64,8 +68,8 @@ export function useGrokVoice(
       }
 
       const ws = new WebSocket(
-        `wss://api.x.ai/v1/realtime?model=${tokenData.model}`,
-        ["realtime", `openai-insecure-api-key.${tokenData.token}`, "openai-beta.realtime-v1"]
+        `wss://api.x.ai/v1/realtime?model=grok-voice-think-fast-1.0`,
+        [`xai-client-secret.${tokenData.token}`]
       );
       wsRef.current = ws;
       playbackRef.current = new AudioPlaybackQueue();
@@ -75,18 +79,16 @@ export function useGrokVoice(
           JSON.stringify({
             type: "session.update",
             session: {
-              modalities: ["text", "audio"],
+              voice: "eve",
               instructions: INTAKE_INSTRUCTIONS,
-              voice: "Eve",
-              input_audio_format: "pcm16",
-              output_audio_format: "pcm16",
-              turn_detection: {
-                type: "server_vad",
-                threshold: 0.5,
-                prefix_padding_ms: 300,
-                silence_duration_ms: 500,
+              turn_detection: { type: "server_vad" },
+              input_audio_transcription: { model: "grok-2-audio" },
+              audio: {
+                input: { format: { type: "audio/pcm", rate: 24000 } },
+                output: { format: { type: "audio/pcm", rate: 24000 } },
               },
               tools: [
+                { type: "web_search" },
                 {
                   type: "function",
                   name: "end_consultation",
@@ -125,11 +127,16 @@ export function useGrokVoice(
         const msg = JSON.parse(event.data);
 
         switch (msg.type) {
-          case "response.audio.delta":
+          case "input_audio_buffer.speech_started":
+            playbackRef.current?.clear();
+            ws.send(JSON.stringify({ type: "response.cancel" }));
+            break;
+
+          case "response.output_audio.delta":
             playbackRef.current?.enqueue(msg.delta);
             break;
 
-          case "response.audio_transcript.delta":
+          case "response.output_audio_transcript.delta":
             setAiTranscript((prev) => prev + msg.delta);
             break;
 

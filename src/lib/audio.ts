@@ -69,6 +69,7 @@ export async function startAudioCapture(
 export class AudioPlaybackQueue {
   private context: AudioContext;
   private nextStartTime = 0;
+  private sources: AudioBufferSourceNode[] = [];
 
   constructor() {
     this.context = new AudioContext({ sampleRate: 24000 });
@@ -91,6 +92,25 @@ export class AudioPlaybackQueue {
     const startTime = Math.max(this.context.currentTime, this.nextStartTime);
     source.start(startTime);
     this.nextStartTime = startTime + buffer.duration;
+
+    this.sources.push(source);
+    source.onended = () => {
+      const idx = this.sources.indexOf(source);
+      if (idx !== -1) this.sources.splice(idx, 1);
+    };
+  }
+
+  // Stops all queued/playing audio immediately — used on user interruption.
+  clear() {
+    for (const source of this.sources) {
+      try {
+        source.stop();
+      } catch {
+        // already stopped
+      }
+    }
+    this.sources = [];
+    this.nextStartTime = this.context.currentTime;
   }
 
   close() {

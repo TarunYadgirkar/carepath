@@ -14,7 +14,7 @@
 
 | Field | Value |
 |---|---|
-| **Current Phase** | Phase 6 — Done (Grok TTS wired) |
+| **Current Phase** | Phase 7 — Done (Grok Realtime Voice fixed + wired as primary) |
 | **Last Updated** | 2026-06-13 |
 | **Last Tool Used** | Cursor |
 | **Vercel URL** | https://carepath-five.vercel.app |
@@ -29,7 +29,7 @@
 
 - [x] `/app/api/realtime-token/route.ts` — POST route that calls xAI and returns ephemeral token
 - [x] `/app/intake/page.tsx` — Basic voice conversation screen (WebSocket connected, transcript appears)
-- [ ] Grok Voice speaking back — BLOCKED, xAI account not authorized for Realtime API (403 on all model names, confirmed 2026-06-13). Superseded by Phase 5 browser-voice live conversation.
+- [x] Grok Voice speaking back — FIXED in Phase 7 (2026-06-13). The 403 was caused by hitting the wrong endpoint (`/v1/realtime/sessions`, which doesn't exist) with the wrong WebSocket subprotocol. Correct endpoint is `/v1/realtime/client_secrets`. See Phase 7.
 - [x] Fallback demo mode toggle — `DEMO_MODE = true` in `/app/intake/page.tsx`, loads `src/mocks/demo-transcript.ts`
 - [x] Fallback mode routes to `/api/classify` with mock transcript and displays raw JSON
 
@@ -183,6 +183,42 @@ Browser mic → Web Speech API (STT) → /api/conversation (gpt-4o-mini) → /ap
 
 ---
 
+### Phase 7 — Grok Realtime Voice Fixed + Wired as Primary ⏱ ~30 min
+*Goal: Fix the root cause of the 403 and make full speech-to-speech Grok Voice the primary `/intake` experience.*
+
+**Status:** Done.
+
+**Root cause of the 403:** `/api/realtime-token` was calling `POST https://api.x.ai/v1/realtime/sessions` — **this endpoint does not exist**. The correct endpoint is `POST https://api.x.ai/v1/realtime/client_secrets`, which takes `{ expires_after: { seconds } }` (no model/voice) and returns `{ value: "<token>", expires_at }`. The WebSocket subprotocol was also OpenAI-style (`["realtime", "openai-insecure-api-key.<token>", "openai-beta.realtime-v1"]`) instead of xAI's `["xai-client-secret.<token>"]`. Both bugs together produced the 403 regardless of model name.
+
+**What changed:**
+- `src/app/api/realtime-token/route.ts` — now calls `/v1/realtime/client_secrets`, reads `data.value` as the token. **Verified via curl — returns a valid token.**
+- `src/hooks/useGrokVoice.ts`:
+  - WS connects with `wss://api.x.ai/v1/realtime?model=grok-voice-think-fast-1.0` and subprotocol `xai-client-secret.<token>`.
+  - `session.update` rewritten to the current xAI schema: `voice: "eve"`, `turn_detection: { type: "server_vad" }`, `input_audio_transcription: { model: "grok-2-audio" }`, `audio: { input: { format: { type: "audio/pcm", rate: 24000 } }, output: { ... } }`.
+  - Event names updated: `response.output_audio.delta` / `response.output_audio_transcript.delta` (was `response.audio.delta` / `response.audio_transcript.delta`).
+  - Added `web_search` tool alongside `end_consultation`; updated `INTAKE_INSTRUCTIONS` to use it proactively.
+  - Added barge-in: `input_audio_buffer.speech_started` clears the playback queue and sends `response.cancel`.
+- `src/lib/audio.ts` — `AudioPlaybackQueue` now tracks active buffer sources and exposes `clear()` for the barge-in above.
+- `src/app/intake/page.tsx` — `useGrokVoice` is now the **primary** voice path (full speech-to-speech, live patient/AI transcripts). `useVoiceConversation` (browser STT + Grok TTS hybrid) remains as an explicit fallback — a "Grok Voice unavailable — switch to browser voice instead" link appears if Grok errors or the browser lacks mic/AudioContext support. Demo mode unchanged.
+- Greeting (`/api/conversation` GREETING, used by the fallback path) updated to: *"Hi, I'm CarePath, your AI health navigator. What's your name, and what's going on today?"*
+
+**Architecture (primary voice path):**
+```
+Browser mic → AudioWorklet/ScriptProcessor (PCM16 24kHz) → wss://api.x.ai/v1/realtime (grok-voice-think-fast-1.0, voice "eve")
+                                                                  ↓ end_consultation tool call (transcript_summary)
+                                                            /api/classify → /card
+```
+
+**Verification:**
+- `npm run type-check` and `npm run build` pass.
+- `curl -X POST /api/realtime-token` on local dev returns `{"token":"xai-realtime-client-secret-...","model":"grok-voice-think-fast-1.0"}` — confirms the 403 is fixed at the token layer.
+- Playwright snapshot of `/intake` shows the new primary button, voice badge, and no fallback warning (Chromium supports `getUserMedia` + `AudioContext`).
+
+**Still needs human verification:**
+- Click "Start Live Conversation" in Chrome with mic on `/intake` — confirm the WS opens, Eve speaks, barge-in works, and `end_consultation` routes to `/card`. If the WS itself errors (vs. the token call), report the exact `error` event payload — the session.update schema may need a small tweak.
+
+---
+
 ## Resume Guide (for Claude Code / next session)
 
 **Start here:**
@@ -237,7 +273,7 @@ Browser mic → Web Speech API (STT) → /api/conversation (gpt-4o-mini) → /ap
 
 ## Known Issues / Blockers
 
-- **xAI Realtime Voice API not authorized for this account.** Key is valid for `/v1/models` and **`/v1/tts` (works — Eve voice returns mp3)**. Re-checked 2026-06-13: `POST /v1/realtime/sessions` returns `403` for all models (`grok-voice-think-fast-1.0`, `grok-2-realtime`, etc.) = team permission gap. **Workaround shipped in Phase 6:** browser STT + Grok TTS (`/api/tts`) + `gpt-4o-mini` conversation. Full speech-to-speech Realtime remains blocked until xAI enables Voice Agent API on the team — `useGrokVoice.ts` is ready to wire back in.
+- **xAI Realtime — RESOLVED 2026-06-13 (Phase 7).** The 403 was caused by calling a nonexistent endpoint (`/v1/realtime/sessions`) with the wrong WebSocket subprotocol — not an account permission gap. Fixed to `/v1/realtime/client_secrets` + `xai-client-secret.<token>` subprotocol. Token minting verified via curl. Full WS round-trip (audio in/out) still needs a human mic test in Chrome — see Phase 7.
 - **OpenAI key verified working** (rotated 2026-06-13): `GET /v1/models/gpt-4o-mini` returns 200. `/api/classify` real pipeline confirmed working on Vercel production.
 
 ```
