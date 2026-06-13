@@ -14,6 +14,45 @@ const EMERGENCY_KEYWORDS = [
   "stroke",
 ];
 
+const NEGATION_WORDS = ["no", "not", "denies", "denying", "without", "never", "negative for"];
+
+// Transcripts interleave "Patient:" and "CarePath:" turns. The assistant's
+// screening questions ("Are you having chest pain?") contain the same
+// keywords as a real emergency report, so only the patient's own words are
+// scanned. Falls back to the full transcript if no speaker labels are present.
+function extractPatientText(transcript: string): string {
+  const matches = transcript.match(/patient:([^]*?)(?=\n\s*\w+:|$)/gi);
+  if (!matches) return transcript;
+  return matches.join("\n");
+}
+
+// Avoids false positives like "No trouble breathing or chest pain" being read
+// as an active emergency — only flags keywords not preceded by a negation
+// within the same clause.
+function hasEmergencyIndicator(transcript: string): boolean {
+  const lower = extractPatientText(transcript).toLowerCase();
+
+  return EMERGENCY_KEYWORDS.some((keyword) => {
+    let fromIndex = 0;
+    while (true) {
+      const matchIndex = lower.indexOf(keyword, fromIndex);
+      if (matchIndex === -1) return false;
+
+      const clauseStart = Math.max(
+        lower.lastIndexOf(".", matchIndex),
+        lower.lastIndexOf(",", matchIndex),
+        lower.lastIndexOf("\n", matchIndex)
+      );
+      const clause = lower.slice(clauseStart + 1, matchIndex);
+
+      const negated = NEGATION_WORDS.some((neg) => clause.includes(neg));
+      if (!negated) return true;
+
+      fromIndex = matchIndex + keyword.length;
+    }
+  });
+}
+
 function buildSystemPrompt(plan: InsurancePlan): string {
   return `You are CarePath, a patient navigation assistant. You receive a transcript of a voice conversation where a patient described their symptoms, medications, and concerns.
 
@@ -105,8 +144,7 @@ export async function POST(req: NextRequest) {
   const plan =
     syntheticPricing.plans[insurancePlan] ?? syntheticPricing.plans[DEFAULT_PLAN_KEY];
 
-  const lower = transcript.toLowerCase();
-  if (EMERGENCY_KEYWORDS.some((kw) => lower.includes(kw))) {
+  if (hasEmergencyIndicator(transcript)) {
     return NextResponse.json({
       ...mockCarePathResult,
       recommendedCareLevel: "emergency_room",

@@ -14,7 +14,7 @@
 
 | Field | Value |
 |---|---|
-| **Current Phase** | Phase 1 — Done, starting Phase 2 |
+| **Current Phase** | Phase 2 — Done, starting Phase 3 |
 | **Last Updated** | 2026-06-13 |
 | **Last Tool Used** | Claude Code |
 | **Vercel URL** | Not deployed yet |
@@ -81,18 +81,34 @@
 ### Phase 2 — Care Card UI ⏱ ~90 min
 *Goal: The CarePathResult renders as a polished Care Card with all sections.*
 
-- [ ] Recommended care level — prominent, with confidence badge
-- [ ] Reasoning — visible, bulleted list (not hidden behind a toggle)
-- [ ] Risk signals — cards or tags
-- [ ] Cost-aware care options table (telehealth / PCP / urgent care / ER with estimated costs)
-- [ ] Red flags section — what would trigger escalation
-- [ ] MedCard section — medications and allergies from speech
-- [ ] "What to say at check-in" — copyable text block
-- [ ] "Questions to ask" — bulleted list
-- [ ] Safety disclaimer — visible on every page
+- [x] Recommended care level — prominent, with confidence badge
+- [x] Reasoning — visible, bulleted list (not hidden behind a toggle)
+- [x] Risk signals — cards or tags
+- [x] Cost-aware care options table (telehealth / PCP / urgent care / ER with estimated costs)
+- [x] Red flags section — what would trigger escalation
+- [x] MedCard section — medications and allergies from speech
+- [x] "What to say at check-in" — copyable text block
+- [x] "Questions to ask" — bulleted list
+- [x] Safety disclaimer — visible on every page
 
-**Status:** Not started
-**Notes / Blockers:** —
+**Status:** Done.
+
+**What was built:**
+- `src/lib/care-result-storage.ts` — `saveCareResult`/`loadCareResult` wrapping `localStorage` (key `carepath:result`).
+- `src/components/SafetyDisclaimer.tsx` — shared disclaimer, now used on `/`, `/intake`, `/card`.
+- `src/components/care-card/` — `care-level-styles.ts` (color tokens per `CareLevel`/`Confidence`), `CareLevelHeader.tsx`, `ListSection.tsx` (generic bulleted list, `warning` variant for red flags, returns `null` if empty), `RiskSignalTags.tsx`, `MedCard.tsx` (3-col medications/allergies/conditions), `CareOptionsTable.tsx` (highlights row matching `recommendedCareLevel`), `CheckInScript.tsx` (`"use client"`, copy-to-clipboard).
+- `src/app/card/page.tsx` — reads result from `localStorage` via `loadCareResult()`; renders "No Care Card yet" + link to `/intake` if empty.
+- `src/app/intake/page.tsx` — on classify success, `saveCareResult(data)` then `router.push("/card")` instead of dumping raw JSON.
+- `src/app/page.tsx` — uses shared `SafetyDisclaimer`.
+
+**Bug found + fixed during smoke test:**
+- `EMERGENCY_KEYWORDS` substring match in `/api/classify` false-triggered on the Maya Patel demo transcript: CarePath's own screening question ("Are you having ... chest pain ...?") and the patient's denial ("No trouble breathing or chest pain") both contain "chest pain", causing every demo run to return `emergency_room` instead of the expected `urgent_care`.
+- Fix: `extractPatientText()` now scans only `Patient:`-labeled turns (ignores the assistant's screening questions), and `hasEmergencyIndicator()` skips matches preceded by a negation word (`no`, `not`, `denies`, `without`, etc.) within the same clause.
+- Re-verified via Playwright: demo flow now returns `urgent_care` / `medium` confidence, matching the documented expected result below.
+
+**Notes / Blockers:**
+- `npm run type-check` and `npm run build` both pass.
+- Full demo flow (`/intake` → Run Demo Conversation → `/api/classify` → `/card`) verified end-to-end via Playwright MCP, including the emergency-keyword negation fix.
 
 ---
 

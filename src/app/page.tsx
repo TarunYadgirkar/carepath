@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SafetyDisclaimer } from "@/components/SafetyDisclaimer";
 
 export default function Home() {
   return (
@@ -14,11 +15,7 @@ export default function Home() {
       >
         Start
       </Link>
-      <p className="max-w-md text-xs text-zinc-500">
-        CarePath is a navigation tool, not a diagnosis system. If you are experiencing an
-        emergency — trouble breathing, chest pain, loss of consciousness — call 911
-        immediately.
-      </p>
+      <SafetyDisclaimer />
     </main>
   );
 }
