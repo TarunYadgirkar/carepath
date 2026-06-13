@@ -92,7 +92,8 @@ export function useGrokVoice(
                 buildSymptomLogContext(getSymptomLog()) +
                 (insurancePlanName
                   ? `\n\nThe patient's insurance plan is: ${insurancePlanName}. Use this for any cost-related context.`
-                  : ""),
+                  : "") +
+                "\n\nOPENING: You speak first. Open with a short greeting (2-3 sentences) that introduces you as CarePath and briefly names what you can do — including that you can verify and fact-check medical information on the web in real time while they speak, estimate costs against their insurance, and point them to relevant patient communities — then invite them to begin.",
               turn_detection: { type: "server_vad" },
               input_audio_transcription: { model: "grok-2-audio" },
               audio: {
@@ -151,6 +152,13 @@ export function useGrokVoice(
               ws.send(JSON.stringify({ type: "response.cancel" }));
               responseActiveRef.current = false;
             }
+            // Begin one fresh user bubble for this utterance; interim
+            // transcripts update it in place instead of stacking duplicates.
+            setMessages((prev) => {
+              const last = prev[prev.length - 1];
+              if (last && last.role === "user" && last.content === "") return prev;
+              return [...prev, { role: "user", content: "" }];
+            });
             break;
 
           case "response.created":
@@ -178,8 +186,27 @@ export function useGrokVoice(
             });
             break;
 
+          case "conversation.item.input_audio_transcription.delta":
+            setMessages((prev) => {
+              const last = prev[prev.length - 1];
+              if (!last || last.role !== "user") {
+                return [...prev, { role: "user", content: msg.delta ?? "" }];
+              }
+              return [...prev.slice(0, -1), { ...last, content: last.content + (msg.delta ?? "") }];
+            });
+            break;
+
           case "conversation.item.input_audio_transcription.completed":
-            setMessages((prev) => [...prev, { role: "user", content: msg.transcript }]);
+            setMessages((prev) => {
+              const text = msg.transcript ?? "";
+              const last = prev[prev.length - 1];
+              // Replace the in-progress user bubble with the final transcript
+              // instead of appending — avoids the repeated, growing duplicates.
+              if (last && last.role === "user") {
+                return [...prev.slice(0, -1), { ...last, content: text }];
+              }
+              return [...prev, { role: "user", content: text }];
+            });
             break;
 
           case "response.function_call_arguments.done":

@@ -111,6 +111,20 @@ export default function Home() {
     queueMicrotask(() => setMedCardExists(hasMedCardData(data)));
   }, []);
 
+  const handleResetAll = () => {
+    if (
+      !window.confirm(
+        "Erase all CarePath data on this device — care cards, medications, records, and symptom log? This cannot be undone.",
+      )
+    ) {
+      return;
+    }
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("carepath"))
+      .forEach((k) => localStorage.removeItem(k));
+    window.location.reload();
+  };
+
   return (
     <main
       className="relative flex flex-1 flex-col items-center overflow-hidden"
@@ -277,8 +291,16 @@ export default function Home() {
       </section>
 
       {/* ── Safety disclaimer ─────────────────────────────────────────────── */}
-      <footer className="w-full max-w-4xl px-6 pb-16 pt-4">
+      <footer className="flex w-full max-w-4xl flex-col items-center gap-6 px-6 pb-16 pt-4">
         <SafetyDisclaimer />
+        <button
+          type="button"
+          onClick={handleResetAll}
+          className="min-h-[44px] rounded-full px-5 py-2 text-xs font-medium transition-colors duration-150 hover:opacity-80"
+          style={{ color: "var(--text-subtle)", border: "1px solid var(--border)" }}
+        >
+          Reset all data
+        </button>
       </footer>
     </main>
   );

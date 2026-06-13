@@ -145,8 +145,12 @@ Respond with JSON only: {"reply": "your next spoken reply", "done": boolean, "su
 };
 
 export const GREETINGS: Record<ConversationMode, string> = {
-  triage: "Hi, I'm CarePath, your AI health navigator. What's your name, and what's going on today?",
-  debrief: "Hi, I'm CarePath. Just got out of an appointment? Tell me what your doctor told you, and I'll help you make sense of it.",
-  medcard: "Hi, I'm CarePath. Let's get your medications on file — what are you currently taking?",
-  signal: "Hi, I'm CarePath Signal. This is a quick, private check-in — how have you been feeling lately?",
+  triage:
+    "Hi, I'm CarePath, your AI health navigator. I can help you figure out the right level of care, estimate what it might cost with your insurance, fact-check medical questions on the web while we talk, and point you to relevant patient communities. To start — what's your name, and what's going on today?",
+  debrief:
+    "Hi, I'm CarePath. I can explain what your doctor told you in plain language, and I can look things up on the web as we talk. Just got out of an appointment? Tell me what they said.",
+  medcard:
+    "Hi, I'm CarePath. I'll get your medications on file and can check for interactions on the web as you list them. What are you currently taking?",
+  signal:
+    "Hi, I'm CarePath Signal. This is a quick, private check-in — how have you been feeling lately?",
 };

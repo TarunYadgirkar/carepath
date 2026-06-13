@@ -3,6 +3,7 @@
 /* ─── Design Tokens ─────────────────────────────────────────────────────── */
 
 :root {
+  color-scheme: light;
   /* Backgrounds — warm paper in light */
   --background:        #f9f7f4;
   --surface:           #ffffff;
@@ -68,11 +69,11 @@
   --duration-normal: 240ms;
 }
 
-/* Theme locked to dark for consistent demo + judging (was prefers-color-scheme).
-   To re-enable light, wrap this block in @media (prefers-color-scheme: dark). */
-:root {
+/* Theme locked to LIGHT for the demo. Dark palette kept but opt-in only —
+   add data-theme="dark" to <html> to enable it. */
+:root[data-theme="dark"] {
     color-scheme: dark;
-    /* Backgrounds — deep cool near-black in dark */
+    /* Backgrounds — deep cool near-black in dark (opt-in only) */
     --background:        #0e1117;
     --surface:           #161b24;
     --surface-2:         #1d2433;
