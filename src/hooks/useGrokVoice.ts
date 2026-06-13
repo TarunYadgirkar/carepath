@@ -136,6 +136,10 @@ export function useGrokVoice(
 
           case "response.created":
             responseActiveRef.current = true;
+            // Each new AI turn starts its own transcript — without this the
+            // previous turn's text stays and new deltas just pile on after
+            // it, making the transcript look like it's repeating itself.
+            setAiTranscript("");
             break;
 
           case "response.done":
