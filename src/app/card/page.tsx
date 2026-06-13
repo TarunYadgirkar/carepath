@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { CarePathResult } from "@/types/carepath";
 import { clearCareResult, loadCareResult, saveCareResult } from "@/lib/care-result-storage";
 import { saveMedCard } from "@/lib/medcard";
+import { buildAggregateTranscript } from "@/lib/aggregate-context";
 import { SafetyDisclaimer } from "@/components/SafetyDisclaimer";
 import { CareCardView } from "@/components/care-card/CareCardView";
 import { ShareCardButton } from "@/components/care-card/ShareCardButton";
@@ -12,6 +13,9 @@ import { DEMO_RESULT } from "@/mocks/demo-result";
 
 export default function CarePage() {
   const [result, setResult] = useState<CarePathResult | null | undefined>(undefined);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aggregateHint, setAggregateHint] = useState<string | null>(null);
+  const [aggregateError, setAggregateError] = useState<string | null>(null);
 
   useEffect(() => {
     const loaded = loadCareResult();
@@ -35,6 +39,41 @@ export default function CarePage() {
       conditions: DEMO_RESULT.conditions,
     });
     setResult(DEMO_RESULT);
+  };
+
+  const generateFromSavedData = async () => {
+    setAggregateHint(null);
+    setAggregateError(null);
+
+    const { transcript, hasAnyData } = buildAggregateTranscript();
+    if (!hasAnyData) {
+      setAggregateHint("No saved data yet — log symptoms, add medications, or import records first.");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const res = await fetch("/api/classify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript, mode: "triage" }),
+      });
+      if (!res.ok) {
+        throw new Error("classify request failed");
+      }
+      const data = (await res.json()) as CarePathResult;
+      saveCareResult(data);
+      saveMedCard({
+        medications: data.medications,
+        allergies: data.allergies,
+        conditions: data.conditions,
+      });
+      setResult(data);
+    } catch {
+      setAggregateError("Couldn't generate your card right now. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const clearAndReset = () => {
@@ -99,6 +138,47 @@ export default function CarePage() {
           >
             Load example
           </button>
+
+          <button
+            onClick={generateFromSavedData}
+            disabled={isGenerating}
+            className="inline-flex w-full min-h-[44px] items-center justify-center rounded-full px-8 py-3 text-sm font-semibold transition-all duration-[var(--duration-normal)] hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+            style={{
+              border: "1px solid var(--border-strong)",
+              color: "var(--text-primary)",
+              background: "var(--surface)",
+            }}
+          >
+            {isGenerating ? "Generating…" : "Generate from my saved data"}
+          </button>
+
+          {aggregateHint && (
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+              {aggregateHint}{" "}
+              <Link
+                href="/timeline"
+                className="underline underline-offset-2 transition-opacity hover:opacity-70"
+                style={{ color: "var(--text-muted)" }}
+              >
+                Log symptoms
+              </Link>{" "}
+              or{" "}
+              <Link
+                href="/medcard"
+                className="underline underline-offset-2 transition-opacity hover:opacity-70"
+                style={{ color: "var(--text-muted)" }}
+              >
+                add medications
+              </Link>
+              .
+            </p>
+          )}
+
+          {aggregateError && (
+            <p className="text-xs leading-relaxed" style={{ color: "var(--care-er-ring)" }}>
+              {aggregateError}
+            </p>
+          )}
 
           <p
             className="text-xs leading-relaxed pt-1"

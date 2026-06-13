@@ -14,8 +14,7 @@ const MODES = [
   {
     href: "/intake",
     badge: "Pre-Visit",
-    title: "Triage",
-    headline: "Don’t know where to go?",
+    title: "Not sure where to go?",
     sub: "Describe your symptoms. Get a care recommendation and cost estimate.",
     accent: "blue" as const,
     featured: true,
@@ -29,8 +28,7 @@ const MODES = [
   {
     href: "/debrief",
     badge: "Post-Visit",
-    title: "Debrief",
-    headline: "Just left the doctor?",
+    title: "Just left the doctor?",
     sub: "Describe what you were told. Get a plain-language explanation and next steps.",
     accent: "green" as const,
     icon: (
@@ -42,8 +40,7 @@ const MODES = [
   {
     href: "/medcard",
     badge: "Ongoing",
-    title: "MedCard",
-    headline: "Know your medications",
+    title: "Keep track of your medications",
     sub: "Speak your medications and allergies. Get a shareable card and interaction check.",
     accent: "purple" as const,
     icon: (
@@ -56,8 +53,7 @@ const MODES = [
   {
     href: "/signal",
     badge: "Ongoing",
-    title: "Check-in",
-    headline: "How have you been feeling?",
+    title: "Check in on how you're feeling",
     sub: "A short voice check-in. CarePath notes what to bring up with your provider.",
     accent: "teal" as const,
     icon: (
@@ -70,8 +66,7 @@ const MODES = [
   {
     href: "/timeline",
     badge: "Ongoing",
-    title: "Timeline",
-    headline: "Track symptoms over time",
+    title: "Log symptoms over time",
     sub: "Log symptoms and events over time. Your history is available when you run a check-in.",
     accent: "amber" as const,
     icon: (

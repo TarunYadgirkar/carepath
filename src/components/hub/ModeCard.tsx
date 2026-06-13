@@ -6,10 +6,8 @@ type ModeAccent = "blue" | "green" | "purple" | "amber" | "teal";
 type Props = {
   href: string;
   badge: string;
-  /** Feature name — the card's primary title (e.g. "Triage") */
+  /** Patient-facing situation/need — the card's primary title */
   title: string;
-  /** Conversational question shown as a subhead below the title */
-  headline: string;
   sub: string;
   accent: ModeAccent;
   icon: ReactNode;
@@ -63,7 +61,7 @@ const ACCENT_MAP: Record<
   },
 };
 
-export function ModeCard({ href, badge, title, headline, sub, accent, icon, featured = false }: Props) {
+export function ModeCard({ href, badge, title, sub, accent, icon, featured = false }: Props) {
   const a = ACCENT_MAP[accent];
 
   return (
@@ -106,12 +104,6 @@ export function ModeCard({ href, badge, title, headline, sub, accent, icon, feat
         >
           {title}
         </h3>
-        <p
-          className={`leading-snug ${featured ? "text-sm" : "text-xs"} font-medium`}
-          style={{ color: "var(--accent)" }}
-        >
-          {headline}
-        </p>
         <p className="mt-0.5 text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
           {sub}
         </p>

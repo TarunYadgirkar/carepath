@@ -61,17 +61,16 @@ export function MedCardResultView({ result }: { result: MedCardResult }) {
         conditions={result.conditions}
       />
 
-      {/* Drug interactions */}
-      {result.interactions.length > 0 && (
-        <section
-          style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-xl)",
-            boxShadow: "var(--shadow-xs)",
-          }}
-          className="p-6"
-        >
+      {/* Drug interactions — always visible */}
+      <section
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius-xl)",
+          boxShadow: "var(--shadow-xs)",
+        }}
+        className="p-6"
+      >
           <h2
             className="text-xs font-semibold uppercase tracking-[0.15em]"
             style={{ color: "var(--text-subtle)" }}
@@ -112,44 +111,49 @@ export function MedCardResultView({ result }: { result: MedCardResult }) {
             </span>
           </div>
 
-          <ul className="mt-4 flex flex-col gap-4">
-            {result.interactions.map((interaction) => {
-              const meta = SEVERITY_META[interaction.severity] ?? SEVERITY_META.low;
-              return (
-                <li
-                  key={interaction.drugs.join("+")}
-                  className="flex flex-col gap-2"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className="text-sm font-semibold"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {interaction.drugs.join(" + ")}
-                    </span>
-                    {/* Severity badge — icon + text, never color alone */}
-                    <span
-                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                      style={{
-                        background: meta.bg,
-                        color: meta.text,
-                        border: `1px solid ${meta.border}`,
-                      }}
-                      aria-label={meta.label}
-                    >
-                      <span aria-hidden="true">{meta.icon}</span>
-                      {interaction.severity}
-                    </span>
-                  </div>
-                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-                    {interaction.description}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
+          {result.interactions.length > 0 ? (
+            <ul className="mt-4 flex flex-col gap-4">
+              {result.interactions.map((interaction) => {
+                const meta = SEVERITY_META[interaction.severity] ?? SEVERITY_META.low;
+                return (
+                  <li
+                    key={interaction.drugs.join("+")}
+                    className="flex flex-col gap-2"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        {interaction.drugs.join(" + ")}
+                      </span>
+                      {/* Severity badge — icon + text, never color alone */}
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                        style={{
+                          background: meta.bg,
+                          color: meta.text,
+                          border: `1px solid ${meta.border}`,
+                        }}
+                        aria-label={meta.label}
+                      >
+                        <span aria-hidden="true">{meta.icon}</span>
+                        {interaction.severity}
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                      {interaction.description}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="mt-4 text-xs italic" style={{ color: "var(--text-subtle)" }}>
+              Not enough data yet
+            </p>
+          )}
         </section>
-      )}
 
       {/* Questions to ask doctor */}
       <ListSection title="Questions to ask your doctor" items={result.questionsToAsk} />

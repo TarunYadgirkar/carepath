@@ -57,8 +57,8 @@ function Group({ title, items, accentVar, icon }: GroupProps) {
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-[0.8125rem]" style={{ color: "var(--text-subtle)" }}>
-          None reported
+        <p className="mt-3 text-xs italic" style={{ color: "var(--text-subtle)" }}>
+          Not enough data yet
         </p>
       )}
     </div>
