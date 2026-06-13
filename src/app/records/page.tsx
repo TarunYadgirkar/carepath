@@ -11,7 +11,8 @@ export default function RecordsPage() {
   const [importState, setImportState] = useState<EpicImportState | null | undefined>(undefined);
 
   useEffect(() => {
-    setImportState(getEpicImport());
+    const state = getEpicImport();
+    queueMicrotask(() => setImportState(state));
   }, []);
 
   if (importState === undefined) {

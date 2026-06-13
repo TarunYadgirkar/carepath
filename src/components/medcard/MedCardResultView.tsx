@@ -21,6 +21,9 @@ export function MedCardResultView({ result }: { result: MedCardResult }) {
       {result.interactions.length > 0 && (
         <section className="rounded-2xl bg-white p-6 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Interactions</h2>
+          <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+            AI estimate — not a substitute for a pharmacist or prescriber. Verify before changing medications.
+          </p>
           <ul className="mt-3 flex flex-col gap-3">
             {result.interactions.map((interaction) => (
               <li key={interaction.drugs.join("+")} className="flex flex-col gap-1 text-sm">

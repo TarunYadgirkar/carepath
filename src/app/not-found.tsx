@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SafetyDisclaimer } from "@/components/SafetyDisclaimer";
 
 export default function NotFound() {
   return (
@@ -13,6 +14,7 @@ export default function NotFound() {
       >
         Back to Home
       </Link>
+      <SafetyDisclaimer />
     </main>
   );
 }

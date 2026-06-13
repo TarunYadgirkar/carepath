@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import {
+  CareLevel,
   CarePathResult,
   mockCarePathResult,
   mockDebriefResult,
@@ -8,8 +9,19 @@ import {
   mockSignalResult,
 } from "@/types/carepath";
 import { syntheticPricing, DEFAULT_PLAN_KEY, type InsurancePlan } from "@/data/synthetic-pricing";
+import { hasEmergencyIndicator } from "@/lib/emergency-keywords";
 
 type ClassifyMode = "triage" | "debrief" | "medcard" | "signal";
+
+const VALID_MODES = new Set<ClassifyMode>(["triage", "debrief", "medcard", "signal"]);
+
+const VALID_CARE_LEVELS = new Set<CareLevel>([
+  "self_monitor",
+  "telehealth",
+  "primary_care",
+  "urgent_care",
+  "emergency_room",
+]);
 
 const MOCK_RESULTS: Record<ClassifyMode, unknown> = {
   triage: mockCarePathResult,
@@ -18,55 +30,13 @@ const MOCK_RESULTS: Record<ClassifyMode, unknown> = {
   signal: mockSignalResult,
 };
 
-const EMERGENCY_KEYWORDS = [
-  "can't breathe",
-  "cannot breathe",
-  "chest pain",
-  "heart attack",
-  "not responding",
-  "unconscious",
-  "severe bleeding",
-  "stroke",
-];
-
-const NEGATION_WORDS = ["no", "not", "denies", "denying", "without", "never", "negative for"];
-
-// Transcripts interleave "Patient:" and "CarePath:" turns. The assistant's
-// screening questions ("Are you having chest pain?") contain the same
-// keywords as a real emergency report, so only the patient's own words are
-// scanned. Falls back to the full transcript if no speaker labels are present.
-function extractPatientText(transcript: string): string {
-  const matches = transcript.match(/patient:([^]*?)(?=\n\s*\w+:|$)/gi);
-  if (!matches) return transcript;
-  return matches.join("\n");
-}
-
-// Avoids false positives like "No trouble breathing or chest pain" being read
-// as an active emergency — only flags keywords not preceded by a negation
-// within the same clause.
-function hasEmergencyIndicator(transcript: string): boolean {
-  const lower = extractPatientText(transcript).toLowerCase();
-
-  return EMERGENCY_KEYWORDS.some((keyword) => {
-    let fromIndex = 0;
-    while (true) {
-      const matchIndex = lower.indexOf(keyword, fromIndex);
-      if (matchIndex === -1) return false;
-
-      const clauseStart = Math.max(
-        lower.lastIndexOf(".", matchIndex),
-        lower.lastIndexOf(",", matchIndex),
-        lower.lastIndexOf("\n", matchIndex)
-      );
-      const clause = lower.slice(clauseStart + 1, matchIndex);
-
-      const negated = NEGATION_WORDS.some((neg) => clause.includes(neg));
-      if (!negated) return true;
-
-      fromIndex = matchIndex + keyword.length;
-    }
-  });
-}
+const EMERGENCY_FALLBACK: Partial<CarePathResult> = {
+  recommendedCareLevel: "emergency_room",
+  confidence: "high",
+  reasoning: [
+    "Emergency indicators detected in transcript — immediate ER evaluation required.",
+  ],
+};
 
 function buildSystemPrompt(plan: InsurancePlan): string {
   return `You are CarePath, a patient navigation assistant. You receive a transcript of a voice conversation where a patient described their symptoms, medications, and concerns.
@@ -227,12 +197,29 @@ const MODE_PROMPT_BUILDERS: Record<Exclude<ClassifyMode, "triage">, () => string
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
-  const transcript: string | undefined = body?.transcript;
+  const transcript: unknown = body?.transcript;
   const insurancePlan: string = body?.insurancePlan ?? DEFAULT_PLAN_KEY;
-  const mode: ClassifyMode = body?.mode ?? "triage";
+  const rawMode: unknown = body?.mode ?? "triage";
 
-  if (!transcript) {
-    return NextResponse.json(MOCK_RESULTS[mode]);
+  if (typeof transcript !== "string" || transcript.length > 8000) {
+    return NextResponse.json(
+      { error: "transcript must be a string of at most 8000 characters" },
+      { status: 400 }
+    );
+  }
+
+  if (!VALID_MODES.has(rawMode as ClassifyMode)) {
+    return NextResponse.json(
+      { error: "mode must be one of: triage, debrief, medcard, signal" },
+      { status: 400 }
+    );
+  }
+
+  const mode = rawMode as ClassifyMode;
+
+  // Emergency override runs before the API key check so emergencies always escalate.
+  if (mode === "triage" && hasEmergencyIndicator(transcript)) {
+    return NextResponse.json({ ...mockCarePathResult, ...EMERGENCY_FALLBACK });
   }
 
   if (mode !== "triage") {
@@ -253,27 +240,28 @@ export async function POST(req: NextRequest) {
       });
 
       const text = response.choices[0].message.content ?? "";
-      const result = JSON.parse(text);
+      const result: unknown = JSON.parse(text);
+
+      if (
+        typeof result !== "object" ||
+        result === null ||
+        !("patientSummary" in result)
+      ) {
+        throw new Error("Invalid non-triage result shape");
+      }
+
       return NextResponse.json(result);
     } catch (err) {
-      console.error("Classify error — returning mock result:", err);
+      console.error(
+        "Classify error — returning mock result:",
+        err instanceof Error ? err.message : "unknown"
+      );
       return NextResponse.json(MOCK_RESULTS[mode]);
     }
   }
 
   const plan =
     syntheticPricing.plans[insurancePlan] ?? syntheticPricing.plans[DEFAULT_PLAN_KEY];
-
-  if (hasEmergencyIndicator(transcript)) {
-    return NextResponse.json({
-      ...mockCarePathResult,
-      recommendedCareLevel: "emergency_room",
-      confidence: "high",
-      reasoning: [
-        "Emergency indicators detected in transcript — immediate ER evaluation required.",
-      ],
-    });
-  }
 
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json(mockCarePathResult);
@@ -294,13 +282,23 @@ export async function POST(req: NextRequest) {
     const text = response.choices[0].message.content ?? "";
     const result: CarePathResult = JSON.parse(text);
 
-    if (!result.recommendedCareLevel || !result.reasoning?.length) {
+    if (
+      !result.recommendedCareLevel ||
+      !VALID_CARE_LEVELS.has(result.recommendedCareLevel) ||
+      !result.reasoning?.length
+    ) {
       throw new Error("Invalid CarePathResult shape");
     }
 
     return NextResponse.json(result);
   } catch (err) {
-    console.error("Classify error — returning mock result:", err);
+    console.error(
+      "Classify error — returning mock result:",
+      err instanceof Error ? err.message : "unknown"
+    );
+    if (hasEmergencyIndicator(transcript)) {
+      return NextResponse.json({ ...mockCarePathResult, ...EMERGENCY_FALLBACK });
+    }
     return NextResponse.json(mockCarePathResult);
   }
 }

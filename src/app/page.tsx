@@ -42,7 +42,8 @@ export default function Home() {
 
   useEffect(() => {
     const medCard = getMedCard();
-    setHasMedCard(Boolean(medCard && (medCard.medications.length || medCard.allergies.length || medCard.conditions.length)));
+    const has = Boolean(medCard && (medCard.medications.length || medCard.allergies.length || medCard.conditions.length));
+    queueMicrotask(() => setHasMedCard(has));
   }, []);
 
   return (

@@ -43,6 +43,13 @@ export async function startAudioCapture(
   const source = audioContext.createMediaStreamSource(stream);
   const processor = audioContext.createScriptProcessor(4096, 1, 1);
 
+  // ScriptProcessorNode requires a destination connection to fire onaudioprocess
+  // in most browsers. A GainNode at 0 sinks the output to silence so raw mic
+  // audio never reaches the speakers (preventing feedback).
+  // TODO: migrate to AudioWorkletNode when browser support is sufficient.
+  const zeroGain = audioContext.createGain();
+  zeroGain.gain.value = 0;
+
   processor.onaudioprocess = (e) => {
     const inputData = e.inputBuffer.getChannelData(0);
     const pcm16 = floatTo16BitPCM(inputData);
@@ -50,7 +57,8 @@ export async function startAudioCapture(
   };
 
   source.connect(processor);
-  processor.connect(audioContext.destination);
+  processor.connect(zeroGain);
+  zeroGain.connect(audioContext.destination);
 
   return {
     stream,
@@ -58,6 +66,7 @@ export async function startAudioCapture(
     processor,
     stop: () => {
       processor.disconnect();
+      zeroGain.disconnect();
       source.disconnect();
       stream.getTracks().forEach((track) => track.stop());
       audioContext.close();

@@ -1,19 +1,4 @@
-const EMERGENCY_PHRASES = [
-  "chest pain",
-  "can't breathe",
-  "cannot breathe",
-  "not breathing",
-  "unconscious",
-  "not responding",
-  "severe bleeding",
-  "stroke",
-  "heart attack",
-];
-
-export function hasEmergencyPhrase(transcript: string): boolean {
-  const lower = transcript.toLowerCase();
-  return EMERGENCY_PHRASES.some((phrase) => lower.includes(phrase));
-}
+export { hasEmergencyIndicator as hasEmergencyPhrase } from "@/lib/emergency-keywords";
 
 export function EmergencyBanner({ show }: { show: boolean }) {
   if (!show) return null;

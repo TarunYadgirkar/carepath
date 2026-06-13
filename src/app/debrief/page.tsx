@@ -11,18 +11,26 @@ import { DebriefCardView } from "@/components/debrief/DebriefCardView";
 export default function DebriefPage() {
   const [classifying, setClassifying] = useState(false);
   const [result, setResult] = useState<DebriefResult | null>(null);
+  const [classifyError, setClassifyError] = useState<string | null>(null);
 
   const classify = useCallback(async (transcript: string) => {
     setClassifying(true);
+    setClassifyError(null);
     try {
       const res = await fetch("/api/classify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ transcript, mode: "debrief" }),
       });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data: DebriefResult = await res.json();
+      if (!Array.isArray(data.medications) || !Array.isArray(data.allergies) || !Array.isArray(data.conditions)) {
+        throw new Error("Unexpected response shape");
+      }
       saveMedCard({ medications: data.medications, allergies: data.allergies, conditions: data.conditions });
       setResult(data);
+    } catch {
+      setClassifyError("Something went wrong analyzing your conversation. Please try again.");
     } finally {
       setClassifying(false);
     }
@@ -73,6 +81,18 @@ export default function DebriefPage() {
             </div>
           }
         />
+      )}
+
+      {classifyError && (
+        <div role="alert" className="flex max-w-md flex-col items-center gap-3 rounded-2xl bg-red-50 p-4 text-center ring-1 ring-red-200 dark:bg-red-950/30 dark:ring-red-900">
+          <p className="text-sm text-red-900 dark:text-red-200">{classifyError}</p>
+          <button
+            onClick={() => setClassifyError(null)}
+            className="rounded-full border border-red-400 px-5 py-2 text-xs font-medium text-red-700 transition-transform duration-150 hover:scale-105 active:scale-95 dark:border-red-700 dark:text-red-300"
+          >
+            Dismiss
+          </button>
+        </div>
       )}
 
       {classifying && <LoadingOverlay message="Putting together your debrief…" />}

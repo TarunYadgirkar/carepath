@@ -16,14 +16,16 @@ export default function CarePage() {
 
   useEffect(() => {
     const loaded = loadCareResult();
-    setResult(loaded);
-    if (loaded) {
-      saveMedCard({
-        medications: loaded.medications,
-        allergies: loaded.allergies,
-        conditions: loaded.conditions,
-      });
-    }
+    queueMicrotask(() => {
+      setResult(loaded);
+      if (loaded) {
+        saveMedCard({
+          medications: loaded.medications,
+          allergies: loaded.allergies,
+          conditions: loaded.conditions,
+        });
+      }
+    });
   }, []);
 
   const startNewConversation = () => {

@@ -19,9 +19,3 @@ CarePath: Got it. Any known allergies to medications? And is there anything else
 Patient: No allergies that I know of. Just the lisinopril 10 milligrams every morning. That's it.
 `.trim();
 
-// Patient profile derived from the transcript — used to pre-populate the Care Card display
-export const DEMO_PATIENT_PROFILE = {
-  name: "Maya Patel",
-  insurancePlan: "BlueShield Silver PPO",
-  deductibleRemaining: 420,
-};

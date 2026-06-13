@@ -15,8 +15,12 @@ export default function SharedCarePage() {
   const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
-    setResult(loadSharedCareResult(params.id));
-    setShareUrl(window.location.href);
+    const loaded = loadSharedCareResult(params.id);
+    const url = window.location.href;
+    queueMicrotask(() => {
+      setResult(loaded);
+      setShareUrl(url);
+    });
   }, [params.id]);
 
   if (result === undefined) {
@@ -39,6 +43,10 @@ export default function SharedCarePage() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-12">
+      <div className="flex justify-center">
+        <SafetyDisclaimer />
+      </div>
+
       <CareCardView result={result} />
 
       <section className="flex flex-col items-center gap-3 rounded-2xl bg-white p-6 text-center ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">

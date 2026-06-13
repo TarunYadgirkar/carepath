@@ -1,4 +1,5 @@
 import { EPIC_FHIR_MOCK, type EpicImportResult } from "@/data/epic-mock";
+import { sanitizeField } from "@/lib/medcard";
 
 export interface EpicImportState {
   connected: boolean;
@@ -42,9 +43,18 @@ export function clearEpicImport(): void {
 export function buildEpicContext(state: EpicImportState | null): string {
   if (!state) return "";
   const { record } = state;
-  const meds = record.medications.map((m) => `${m.name} (${m.frequency})`).join(", ");
-  const allergies = record.allergies.map((a) => `${a.substance} (${a.reaction}, ${a.severity})`).join(", ");
-  const conditions = record.conditions.map((c) => `${c.name} (${c.status})`).join(", ");
-  const labs = record.labResults.map((l) => `${l.name}: ${l.value} (${l.flag})`).join(", ");
-  return `\n\nThe patient connected their health records from ${state.systemName}. On file: Medications: ${meds}. Allergies: ${allergies}. Conditions: ${conditions}. Recent labs: ${labs}. Use this context — they don't need to repeat themselves.`;
+  const systemName = sanitizeField(state.systemName);
+  const meds = record.medications
+    .map((m) => `${sanitizeField(m.name)} (${sanitizeField(m.frequency)})`)
+    .join(", ");
+  const allergies = record.allergies
+    .map((a) => `${sanitizeField(a.substance)} (${sanitizeField(a.reaction)}, ${sanitizeField(a.severity)})`)
+    .join(", ");
+  const conditions = record.conditions
+    .map((c) => `${sanitizeField(c.name)} (${sanitizeField(c.status)})`)
+    .join(", ");
+  const labs = record.labResults
+    .map((l) => `${sanitizeField(l.name)}: ${sanitizeField(l.value)} (${sanitizeField(l.flag)})`)
+    .join(", ");
+  return `\n\nThe patient connected their health records from ${systemName}. On file: Medications: ${meds}. Allergies: ${allergies}. Conditions: ${conditions}. Recent labs: ${labs}. Use this context — they don't need to repeat themselves.`;
 }

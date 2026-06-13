@@ -76,34 +76,3 @@ export const syntheticPricing: SyntheticPricingData = {
 
 // Default plan used when no plan is specified in voice conversation
 export const DEFAULT_PLAN_KEY = "BlueShield Silver PPO";
-
-/**
- * Returns a human-readable cost estimate string for a given care type.
- * Uses the patient's copay if their deductible is met, otherwise estimates from base costs.
- */
-export function estimateCost(
-  careType: keyof SyntheticPricingData["baseCosts"],
-  planKey: string = DEFAULT_PLAN_KEY
-): string {
-  const plan = syntheticPricing.plans[planKey];
-  const base = syntheticPricing.baseCosts[careType];
-
-  if (!plan) {
-    return `$${base.min}–$${base.max} (uninsured estimate)`;
-  }
-
-  switch (careType) {
-    case "telehealth":
-      return `$${plan.telehealthCopay} copay`;
-    case "primary_care":
-      return `$${plan.pcpCopay} copay`;
-    case "urgent_care":
-      return `$${plan.urgentCareCopay}–$${Math.round(
-        plan.urgentCareCopay + base.max * plan.coinsuranceAfterDeductible
-      )}`;
-    case "emergency_room":
-      return `$${plan.erCopay}–$${base.max}`;
-    default:
-      return `$${base.min}–$${base.max}`;
-  }
-}

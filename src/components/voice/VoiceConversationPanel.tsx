@@ -46,8 +46,12 @@ export function VoiceConversationPanel({
   const [useFallbackVoice, setUseFallbackVoice] = useState(false);
 
   useEffect(() => {
-    setVoiceSupported(isVoiceConversationSupported());
-    setGrokSupported(isGrokVoiceSupported());
+    const voice = isVoiceConversationSupported();
+    const grok = isGrokVoiceSupported();
+    queueMicrotask(() => {
+      setVoiceSupported(voice);
+      setGrokSupported(grok);
+    });
   }, []);
 
   const fallbackVoice = useVoiceConversation(onConsultationEnd, mode);

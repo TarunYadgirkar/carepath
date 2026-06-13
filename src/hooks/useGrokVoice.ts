@@ -112,6 +112,7 @@ export function useGrokVoice(
         );
 
         startAudioCapture((base64) => {
+          if (ws.readyState !== WebSocket.OPEN || ws.bufferedAmount > 1_000_000) return;
           ws.send(JSON.stringify({ type: "input_audio_buffer.append", audio: base64 }));
         })
           .then((capture) => {

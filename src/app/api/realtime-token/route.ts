@@ -23,8 +23,9 @@ export async function POST() {
 
   if (!response.ok) {
     const detail = await response.text();
+    console.error("Realtime token upstream error:", response.status, detail);
     return NextResponse.json(
-      { error: "Failed to create Grok Voice session", detail },
+      { error: "Voice service temporarily unavailable" },
       { status: 502 }
     );
   }
