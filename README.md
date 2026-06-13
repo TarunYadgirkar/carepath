@@ -1,60 +1,97 @@
 # CarePath
 
-**Voice-first patient care navigation.**
+**Your personal healthcare center. Voice first.**
 
 > "Tell it what's wrong. It tells you where to go, what it may cost, and what to bring."
 
-CarePath is a voice-first patient navigation assistant for people who don't know what kind of care they need. You describe your symptoms out loud. CarePath recommends a care level, shows you its reasoning, estimates cost with your insurance, and generates a shareable Care Card you can bring to the provider.
+CarePath helps people answer the hardest question when they feel sick: where do I actually go? You describe your symptoms out loud and CarePath recommends a level of care, shows its reasoning and a confidence score, estimates the cost against your insurance, and builds a shareable Care Card you can bring to the provider. It also helps after a visit, tracks your medications and symptoms over time, and can pull from your existing health records.
 
-**This is a navigation tool, not a diagnosis system.** If you are experiencing a medical emergency — trouble breathing, chest pain, or loss of consciousness — call 911 immediately.
+**Live:** https://carepath-five.vercel.app
+**Repo:** https://github.com/TarunYadgirkar/carepath
 
----
-
-## What It Does
-
-1. **Voice conversation** — Speak naturally about symptoms, medications, and concerns. Live conversation runs in-browser (Web Speech API) with a `gpt-4o-mini` conversational backend; a demo mode (preloaded transcript) is also available.
-2. **Care triage** — Recommends the right level of care: self-monitoring, telehealth, primary care, urgent care, or ER — with visible reasoning.
-3. **Cost clarity** — Estimates cost for each care option using your insurance context.
-4. **Care Card** — Generates a shareable card with your care path, risk signals, what to say at check-in, red flags, and questions to ask.
+> **CarePath is a navigation tool, not a diagnosis system.** If you are experiencing an emergency such as trouble breathing, chest pain, or loss of consciousness, call 911 immediately.
 
 ---
 
-## Built At
+## What it does
 
-Autonomous Healthcare Hackathon — Legion Health × Atlas AI — June 13, 2026
+Five connected modes, all voice first:
 
-**Sponsors:** xAI · Vercel · Cursor · Inngest
+- **Triage** — describe your symptoms and get a recommended care level (self-monitor, telehealth, primary care, urgent care, or ER) with visible reasoning, a confidence score, and a cost estimate for each option against your plan.
+- **Debrief** — just left the doctor? Describe what they told you and get a plain language explanation plus next steps.
+- **MedCard** — speak your medications and allergies for a shareable card and an interaction check, or scan a pill bottle label with your camera.
+- **Check-in** — a short voice mental health check-in that notes what to raise with your provider.
+- **Timeline** — log symptoms and events over time; your history feeds directly into triage.
+
+Plus:
+- **Care Card** — a shareable summary with care level, reasoning, cost-aware options, red flags, what to say at check-in, questions to ask, and what to bring. It can be generated from any data you have, even just your symptom timeline.
+- **Records import** — a simulated SMART on FHIR import modeled on Epic MyChart to pre-fill medications, allergies, and conditions.
+- **Patient communities** — relevant Reddit communities for your symptoms (via the arctic_shift API), with clear "peer experiences, not medical advice" disclaimers.
+- **Web fact-check** — the voice agent can verify medical information on the web in real time while you speak.
+- **Privacy by design** — all of your data lives in your browser. No database, nothing sent to a server unless you choose. 911 is never actually dialed.
 
 ---
 
-## Tech Stack
+## Tech stack
 
-- **Framework:** Next.js 14+ (App Router, TypeScript)
-- **Styling:** Tailwind CSS
-- **Voice:** Web Speech API (browser-native STT/TTS) for live conversation; Grok Voice (xAI Realtime API) integration present but blocked pending account access
-- **AI extraction:** OpenAI API (`gpt-4o-mini`)
+- **Framework:** Next.js 16 (App Router), React 19, TypeScript (strict)
+- **Styling:** Tailwind CSS v4, light theme, WCAG AA focus
+- **Voice:** Grok Voice (xAI Realtime API, OpenAI compatible) for live speech-to-speech, with a browser Web Speech API fallback
+- **AI:** OpenAI `gpt-4o-mini` for triage classification, conversations, and community matching; `gpt-4o-mini` vision for the pill bottle scanner
+- **Reddit data:** arctic_shift public API (no key required)
+- **Records:** simulated SMART on FHIR import
+- **Storage:** browser `localStorage` only, no database
 - **Deployment:** Vercel
 
 ---
 
-## Local Development
+## Local development
 
 ```bash
-# Install dependencies
 npm install
 
-# Copy environment variables
 cp .env.example .env.local
-# Fill in OPENAI_API_KEY (XAI_API_KEY optional — Grok Voice path is currently blocked)
+# Fill in:
+#   OPENAI_API_KEY  (triage, conversations, communities, pill scan)
+#   XAI_API_KEY     (Grok Voice + TTS)
 
-# Start dev server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
+Scripts:
+
+```bash
+npm run dev          # dev server
+npm run build        # production build
+npm run start        # serve the production build
+npm run type-check   # tsc --noEmit
+npm run lint         # eslint
+```
+
+Node 22.x (see `.nvmrc`).
+
 ---
 
-## Note on Data
+## Security and resilience
 
-All insurance and pricing data is **synthetic**. No real PHI is required. No real insurance APIs are called. CarePath uses a hardcoded synthetic BlueShield Silver PPO plan for demo purposes.
+- API keys are server-side only and never reach the client.
+- Security headers (CSP, HSTS, X-Frame-Options, and more) are set in `next.config.ts`.
+- Per-IP rate limiting on all API routes (`src/proxy.ts`). Set `DISABLE_RATE_LIMIT=1` in the environment to turn it off for demos.
+- Upstream AI calls have timeouts so a slow provider cannot stall the app under load.
+- The triage classifier fails safe: if a call fails on a transcript with emergency signals, it escalates to the emergency room rather than downgrading.
+
+---
+
+## A note on data
+
+Insurance and pricing data is **synthetic**. No real PHI is required, no real insurance APIs are called, and the Epic MyChart import is a simulation. CarePath defaults to a synthetic BlueShield Silver PPO plan for demos.
+
+---
+
+## Built at
+
+Autonomous Healthcare Hackathon — Legion Health × Atlas AI — June 13, 2026
+
+**Sponsors:** xAI · Vercel · Cursor · Inngest
