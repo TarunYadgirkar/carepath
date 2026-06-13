@@ -10,8 +10,8 @@ export function SiteHeader() {
         <Link href="/" className="transition-colors hover:text-[var(--accent)]">
           Home
         </Link>
-        <Link href="/intake" className="transition-colors hover:text-[var(--accent)]">
-          New Conversation
+        <Link href="/records" className="transition-colors hover:text-[var(--accent)]">
+          Records
         </Link>
         <Link href="/card" className="transition-colors hover:text-[var(--accent)]">
           Care Card
