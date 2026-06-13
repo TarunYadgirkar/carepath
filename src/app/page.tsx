@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SafetyDisclaimer } from "@/components/SafetyDisclaimer";
+import { ConnectHealthRecordsButton } from "@/components/epic/ConnectHealthRecordsButton";
 
 const STEPS = [
   {
@@ -39,6 +40,10 @@ export default function Home() {
       >
         Start
       </Link>
+
+      <div className="mt-4">
+        <ConnectHealthRecordsButton />
+      </div>
 
       <section aria-labelledby="how-it-works" className="mt-20 grid w-full max-w-3xl gap-6 sm:grid-cols-3">
         <h2 id="how-it-works" className="sr-only">

@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { OrbStatus } from "@/components/VoiceOrb";
 import { speakGrokTts, stopGrokTts } from "@/lib/grok-tts";
+import { buildEpicContext, getEpicImport } from "@/lib/epic-import";
 import { buildMedCardContext, getMedCard } from "@/lib/medcard";
 import type { ConversationMode } from "@/lib/mode-prompts";
 
@@ -170,7 +171,11 @@ export function useVoiceConversation(
         const res = await fetch("/api/conversation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: updated, mode, medContext: buildMedCardContext(getMedCard()) }),
+          body: JSON.stringify({
+            messages: updated,
+            mode,
+            medContext: buildMedCardContext(getMedCard()) + buildEpicContext(getEpicImport()),
+          }),
         });
         const data: ConversationReply = await res.json();
         await handleAssistantReply(data, updated);

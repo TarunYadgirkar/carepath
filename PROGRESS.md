@@ -289,6 +289,26 @@ Browser mic → AudioWorklet/ScriptProcessor (PCM16 24kHz) → wss://api.x.ai/v1
 
 ---
 
+## Phase 9 — Epic MyChart / FHIR Import Simulation ⏱ done 2026-06-13
+
+*Goal: convincing static simulation of connecting health records via Epic FHIR R4, feeding into voice context.*
+
+- [x] `src/data/epic-mock.ts` — `EPIC_SYSTEMS`, `EPIC_FHIR_MOCK` (Maya Patel record: meds, allergies, conditions, recent encounters, lab results), `EpicImportResult` type, `LabFlag` type + `LAB_FLAG_STYLES` color map
+- [x] `src/lib/epic-import.ts` — `getEpicImport`/`saveEpicImport`/`clearEpicImport`/`buildEpicContext`, localStorage key `carepath-epic-import`, mirrors `medcard.ts` pattern
+- [x] `src/components/epic/ConnectHealthRecordsModal.tsx` — 3-step flow (select system → simulated OAuth progress bar, 2s → success summary with counts), calls `saveEpicImport` + `saveMedCard` on success
+- [x] `src/components/epic/ConnectHealthRecordsButton.tsx` — "Import from Epic MyChart" pill button, opens modal
+- [x] `src/app/records/page.tsx` — read-only viewer (Medications, Allergies, Lab Results w/ reference ranges + flag colors, Recent Encounters); prompts to connect if no import yet
+- [x] Wired `buildEpicContext(getEpicImport())` into both `useGrokVoice` and `useVoiceConversation` instructions/context, alongside MedCard context
+- [x] Added `ConnectHealthRecordsButton` to landing page (`src/app/page.tsx`)
+- [x] Added `@keyframes connect-progress` to `globals.css` for the OAuth progress bar
+
+**Notes:**
+- No real OAuth/FHIR network calls — fully static/synthetic, per hard rules.
+- `npx tsc --noEmit` passes clean. `npm run build` / `npx next build` could not be run this session — local sandbox permission classifier repeatedly blocked the build command (misattributing it to an earlier accidental `rm -rf` on a typo'd directory that was already cleaned up). Run `npm run build` before next deploy to confirm.
+- Next up (per `carepath-expansion.md` build order): new landing hub UI (2x2 mode grid — Triage/Debrief/MedCard/Signal), then Debrief mode (`/debrief`), MedCard mode (`/medcard`), Signal mode (`/signal`).
+
+---
+
 ## Known Issues / Blockers
 
 - **xAI Realtime — RESOLVED 2026-06-13 (Phase 7).** The 403 was caused by calling a nonexistent endpoint (`/v1/realtime/sessions`) with the wrong WebSocket subprotocol — not an account permission gap. Fixed to `/v1/realtime/client_secrets` + `xai-client-secret.<token>` subprotocol. Token minting verified via curl. Full WS round-trip (audio in/out) still needs a human mic test in Chrome — see Phase 7.

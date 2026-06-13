@@ -29,6 +29,15 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+@keyframes connect-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 @keyframes orb-pulse {
   0%,
   100% {
