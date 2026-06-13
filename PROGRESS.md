@@ -14,7 +14,7 @@
 
 | Field | Value |
 |---|---|
-| **Current Phase** | Phase 8 — Done (Site essentials: footer, 404, metadata, Care Card reset) |
+| **Current Phase** | Phase 12 — Done (transcript fix + mode prompt scope pass). Next up: see `FEATURE_BUILD_GUIDE.md` (symptom timeline + camera scan) |
 | **Last Updated** | 2026-06-13 |
 | **Last Tool Used** | Cursor |
 | **Vercel URL** | https://carepath-five.vercel.app |
@@ -350,6 +350,7 @@ Browser mic → AudioWorklet/ScriptProcessor (PCM16 24kHz) → wss://api.x.ai/v1
 **Notes:**
 - `npx tsc --noEmit` passes clean.
 - Calendar/symptom-log and camera/pill-bottle-scan features discussed but not started — both feasible without a database (localStorage pattern) or new API keys (camera feature would reuse `OPENAI_API_KEY` via gpt-4o-mini vision in a new `/api/scan-label` route).
+- Full build instructions for both written to `FEATURE_BUILD_GUIDE.md` — to be picked up in a separate session/account. Not yet started.
 
 ---
 
