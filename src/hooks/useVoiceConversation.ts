@@ -3,6 +3,8 @@
 import { useCallback, useRef, useState } from "react";
 import type { OrbStatus } from "@/components/VoiceOrb";
 import { speakGrokTts, stopGrokTts } from "@/lib/grok-tts";
+import { buildMedCardContext, getMedCard } from "@/lib/medcard";
+import type { ConversationMode } from "@/lib/mode-prompts";
 
 export type ConversationStatus = OrbStatus;
 
@@ -69,7 +71,10 @@ interface UseVoiceConversationResult {
   stop: () => void;
 }
 
-export function useVoiceConversation(onDone: (summary: string) => void): UseVoiceConversationResult {
+export function useVoiceConversation(
+  onDone: (summary: string) => void,
+  mode: ConversationMode = "triage"
+): UseVoiceConversationResult {
   const [status, setStatus] = useState<ConversationStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
@@ -165,7 +170,7 @@ export function useVoiceConversation(onDone: (summary: string) => void): UseVoic
         const res = await fetch("/api/conversation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: updated }),
+          body: JSON.stringify({ messages: updated, mode, medContext: buildMedCardContext(getMedCard()) }),
         });
         const data: ConversationReply = await res.json();
         await handleAssistantReply(data, updated);
@@ -175,7 +180,7 @@ export function useVoiceConversation(onDone: (summary: string) => void): UseVoic
         cleanup();
       }
     },
-    [cleanup, handleAssistantReply]
+    [cleanup, handleAssistantReply, mode]
   );
 
   const start = useCallback(() => {
@@ -242,7 +247,7 @@ export function useVoiceConversation(onDone: (summary: string) => void): UseVoic
         const res = await fetch("/api/conversation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: [] }),
+          body: JSON.stringify({ messages: [], mode }),
         });
         const greeting: ConversationReply = await res.json();
         const greetingMessages: ConversationMessage[] = [
@@ -259,7 +264,7 @@ export function useVoiceConversation(onDone: (summary: string) => void): UseVoic
     };
 
     void beginWithGreeting();
-  }, [cleanup, handleUserTurn, listenOnce, speakAndContinue]);
+  }, [cleanup, handleUserTurn, listenOnce, speakAndContinue, mode]);
 
   return { status, error, messages, interimTranscript, speakingText, start, stop };
 }

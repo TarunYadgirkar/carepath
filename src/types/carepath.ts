@@ -140,3 +140,123 @@ export const mockCarePathResult: CarePathResult = {
     "This CarePath summary (share or screenshot)",
   ],
 };
+
+// --- Debrief mode (post-visit) ---
+
+export interface DebriefResult {
+  patientSummary: string;
+  whatTheDoctorSaid: string;
+  keyFacts: string[];
+  recommendedNextStep: string;
+  followUpTiming: string;
+  questionsToAsk: string[];
+  flaggedConcerns: string[];
+  medications: string[];
+  allergies: string[];
+  conditions: string[];
+  whatToBring: string[];
+  redFlags: string[];
+}
+
+export const mockDebriefResult: DebriefResult = {
+  patientSummary:
+    "Patient described a recent appointment where their doctor reviewed lab results and discussed next steps for blood pressure management.",
+  whatTheDoctorSaid:
+    "Your blood pressure is a bit higher than your doctor would like, and your recent labs show your A1c is in the prediabetic range. Your doctor wants to try a low-dose medication and recheck things in a few months — this is common and very manageable.",
+  keyFacts: [
+    "Blood pressure reading was elevated (128/82)",
+    "A1c of 6.1% — prediabetic range, not diabetes",
+    "Doctor is starting a low-dose blood pressure medication",
+  ],
+  recommendedNextStep: "Start the new medication as prescribed and monitor blood pressure at home twice a week.",
+  followUpTiming: "Follow-up appointment in 3 months to recheck blood pressure and labs.",
+  questionsToAsk: [
+    "What time of day should I take this medication?",
+    "Are there foods or other medications I should avoid while on it?",
+    "What blood pressure readings at home should prompt me to call sooner?",
+    "Should I make any diet or exercise changes before the next visit?",
+  ],
+  flaggedConcerns: [],
+  medications: ["New blood pressure medication (low-dose, name not specified)"],
+  allergies: [],
+  conditions: ["Elevated blood pressure", "Prediabetes (A1c 6.1%)"],
+  whatToBring: ["Home blood pressure log", "List of current medications", "Insurance card"],
+  redFlags: [
+    "Severe headache, vision changes, or chest pain — seek immediate care",
+    "Blood pressure readings consistently above 180/120",
+  ],
+};
+
+// --- MedCard mode (medication capture + interaction check) ---
+
+export interface DrugInteraction {
+  drugs: string[];
+  severity: "low" | "moderate" | "high";
+  description: string;
+}
+
+export interface MedCardResult {
+  patientSummary: string;
+  medications: string[];
+  allergies: string[];
+  conditions: string[];
+  interactions: DrugInteraction[];
+  questionsToAsk: string[];
+}
+
+export const mockMedCardResult: MedCardResult = {
+  patientSummary:
+    "Patient is taking lisinopril for blood pressure and metformin for prediabetes, took ibuprofen today, and has a penicillin allergy.",
+  medications: ["Lisinopril 10mg daily", "Metformin 500mg twice daily", "Ibuprofen (as needed)"],
+  allergies: ["Penicillin"],
+  conditions: ["Hypertension", "Prediabetes"],
+  interactions: [
+    {
+      drugs: ["Lisinopril", "Ibuprofen"],
+      severity: "moderate",
+      description:
+        "NSAIDs like ibuprofen can reduce the effectiveness of ACE inhibitors (lisinopril) and may increase the risk of kidney problems with regular use.",
+    },
+  ],
+  questionsToAsk: [
+    "Is it safe to keep taking ibuprofen occasionally with lisinopril?",
+    "Are there pain relievers that are safer for me long-term?",
+    "Should my kidney function be monitored given this combination?",
+  ],
+};
+
+// --- Signal mode (mental health check-in) ---
+
+export interface SignalResult {
+  patientSummary: string;
+  themesNoticed: string[];
+  whatToTellYourProvider: string[];
+  questionsToAsk: string[];
+  positiveObservations: string[];
+  followUpSuggestion: string;
+  resources: string[];
+  disclaimer: string;
+}
+
+export const mockSignalResult: SignalResult = {
+  patientSummary:
+    "Patient shared that sleep has been disrupted for the past couple of weeks and they've been feeling more anxious than usual, especially in the mornings.",
+  themesNoticed: [
+    "Sleep disruption — difficulty falling asleep most nights",
+    "Increased anxiety, particularly in the morning",
+  ],
+  whatToTellYourProvider: [
+    "Sleep has been disrupted for about two weeks",
+    "Morning anxiety has been more noticeable recently",
+    "No changes in appetite or energy reported",
+  ],
+  questionsToAsk: [
+    "Could this be related to stress, or is it worth ruling out other causes?",
+    "Are there sleep hygiene changes worth trying first?",
+    "Would a short-term referral to a counselor be helpful?",
+  ],
+  positiveObservations: ["Patient is proactively reflecting on their wellbeing and reaching out"],
+  followUpSuggestion: "Worth mentioning at your next regular appointment, or sooner if it worsens.",
+  resources: ["988 Suicide & Crisis Lifeline (call or text 988)", "Crisis Text Line (text HOME to 741741)"],
+  disclaimer: "This check-in is not a clinical assessment. Please share this with your provider.",
+};

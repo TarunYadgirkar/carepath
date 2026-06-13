@@ -1,7 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { CarePathResult, mockCarePathResult } from "@/types/carepath";
+import {
+  CarePathResult,
+  mockCarePathResult,
+  mockDebriefResult,
+  mockMedCardResult,
+  mockSignalResult,
+} from "@/types/carepath";
 import { syntheticPricing, DEFAULT_PLAN_KEY, type InsurancePlan } from "@/data/synthetic-pricing";
+
+type ClassifyMode = "triage" | "debrief" | "medcard" | "signal";
+
+const MOCK_RESULTS: Record<ClassifyMode, unknown> = {
+  triage: mockCarePathResult,
+  debrief: mockDebriefResult,
+  medcard: mockMedCardResult,
+  signal: mockSignalResult,
+};
 
 const EMERGENCY_KEYWORDS = [
   "can't breathe",
@@ -132,13 +147,116 @@ Return a JSON object with exactly this structure:
 }`;
 }
 
+function buildDebriefPrompt(): string {
+  return `You are CarePath, a post-visit patient companion. The patient just left a medical
+appointment and is describing what their doctor told them. They may be confused, anxious,
+or overwhelmed.
+
+Your job:
+1. Explain what they were told in plain, calm language
+2. Extract the key facts: diagnosis or finding, recommended treatment or next step, follow-up timing
+3. Generate specific questions they should ask at their follow-up
+4. Flag anything that sounds like it needs urgent clarification or a second opinion
+5. Produce a "what I learned today" summary card
+
+Return JSON with this structure:
+{
+  "patientSummary": "what the patient described",
+  "whatTheDoctorSaid": "plain language explanation of the diagnosis/findings",
+  "keyFacts": ["fact 1", "fact 2"],
+  "recommendedNextStep": "what to do next and by when",
+  "followUpTiming": "when to go back",
+  "questionsToAsk": ["question 1", "question 2", "question 3"],
+  "flaggedConcerns": ["anything worth a second opinion or urgent clarification"],
+  "medications": ["any new medications mentioned"],
+  "allergies": ["any allergies mentioned"],
+  "conditions": ["diagnosis or condition mentioned"],
+  "whatToBring": ["what to bring to follow-up"],
+  "redFlags": ["symptoms that would mean go back sooner"]
+}`;
+}
+
+function buildMedCardPrompt(): string {
+  return `You are CarePath, a medication assistant. The patient is telling you about their
+medications, dosages, allergies, and conditions. Your job is to capture this accurately
+and check for notable interactions.
+
+Return JSON:
+{
+  "patientSummary": "brief summary",
+  "medications": ["Lisinopril 10mg daily", "Metformin 500mg twice daily"],
+  "allergies": ["Penicillin", "Sulfa drugs"],
+  "conditions": ["Type 2 diabetes", "Hypertension"],
+  "interactions": [
+    {
+      "drugs": ["Lisinopril", "Ibuprofen"],
+      "severity": "moderate",
+      "description": "NSAIDs like ibuprofen can reduce the effectiveness of ACE inhibitors and may increase risk of kidney problems"
+    }
+  ],
+  "questionsToAsk": ["questions about their medications to raise with their doctor"]
+}`;
+}
+
+function buildSignalPrompt(): string {
+  return `You are CarePath Signal, a mental health check-in tool. The patient is describing
+how they have been feeling recently. You are NOT a therapist and NOT providing mental
+health treatment. Your role is to help the patient organize their thoughts before
+a provider appointment.
+
+Return JSON:
+{
+  "patientSummary": "what the patient shared",
+  "themesNoticed": ["theme 1 — e.g. sleep disruption", "theme 2 — e.g. increased anxiety"],
+  "whatToTellYourProvider": ["specific things worth mentioning at their appointment"],
+  "questionsToAsk": ["questions to raise with their provider"],
+  "positiveObservations": ["any positive or resilience signals noted"],
+  "followUpSuggestion": "when to check in with a provider based on what was shared",
+  "resources": ["if relevant — 988 Lifeline, Crisis Text Line, etc."],
+  "disclaimer": "This check-in is not a clinical assessment. Please share this with your provider."
+}`;
+}
+
+const MODE_PROMPT_BUILDERS: Record<Exclude<ClassifyMode, "triage">, () => string> = {
+  debrief: buildDebriefPrompt,
+  medcard: buildMedCardPrompt,
+  signal: buildSignalPrompt,
+};
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const transcript: string | undefined = body?.transcript;
   const insurancePlan: string = body?.insurancePlan ?? DEFAULT_PLAN_KEY;
+  const mode: ClassifyMode = body?.mode ?? "triage";
 
   if (!transcript) {
-    return NextResponse.json(mockCarePathResult);
+    return NextResponse.json(MOCK_RESULTS[mode]);
+  }
+
+  if (mode !== "triage") {
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(MOCK_RESULTS[mode]);
+    }
+
+    try {
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        max_tokens: 1500,
+        messages: [
+          { role: "system", content: MODE_PROMPT_BUILDERS[mode]() },
+          { role: "user", content: transcript },
+        ],
+      });
+
+      const text = response.choices[0].message.content ?? "";
+      const result = JSON.parse(text);
+      return NextResponse.json(result);
+    } catch (err) {
+      console.error("Classify error — returning mock result:", err);
+      return NextResponse.json(MOCK_RESULTS[mode]);
+    }
   }
 
   const plan =

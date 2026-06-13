@@ -5,20 +5,25 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CarePathResult } from "@/types/carepath";
 import { clearCareResult, loadCareResult } from "@/lib/care-result-storage";
+import { saveMedCard } from "@/lib/medcard";
 import { SafetyDisclaimer } from "@/components/SafetyDisclaimer";
-import { CareLevelHeader } from "@/components/care-card/CareLevelHeader";
-import { ListSection } from "@/components/care-card/ListSection";
-import { RiskSignalTags } from "@/components/care-card/RiskSignalTags";
-import { CareOptionsTable } from "@/components/care-card/CareOptionsTable";
-import { MedCard } from "@/components/care-card/MedCard";
-import { CheckInScript } from "@/components/care-card/CheckInScript";
+import { CareCardView } from "@/components/care-card/CareCardView";
+import { ShareCardButton } from "@/components/care-card/ShareCardButton";
 
 export default function CarePage() {
   const router = useRouter();
   const [result, setResult] = useState<CarePathResult | null | undefined>(undefined);
 
   useEffect(() => {
-    setResult(loadCareResult());
+    const loaded = loadCareResult();
+    setResult(loaded);
+    if (loaded) {
+      saveMedCard({
+        medications: loaded.medications,
+        allergies: loaded.allergies,
+        conditions: loaded.conditions,
+      });
+    }
   }, []);
 
   const startNewConversation = () => {
@@ -47,29 +52,10 @@ export default function CarePage() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-12">
-      <CareLevelHeader
-        careLevel={result.recommendedCareLevel}
-        confidence={result.confidence}
-        patientSummary={result.patientSummary}
-      />
+      <CareCardView result={result} />
 
-      <ListSection title="Reasoning" items={result.reasoning} />
-      <RiskSignalTags signals={result.riskSignals} />
-      <CareOptionsTable
-        options={result.careOptions}
-        recommendedCareLevel={result.recommendedCareLevel}
-      />
-      <ListSection title="Red flags — seek immediate care if these occur" items={result.redFlags} variant="warning" />
-      <MedCard
-        medications={result.medications}
-        allergies={result.allergies}
-        conditions={result.conditions}
-      />
-      <CheckInScript script={result.whatToSayAtCheckIn} />
-      <ListSection title="Questions to ask" items={result.questionsToAsk} />
-      <ListSection title="What to bring" items={result.whatToBring} />
-
-      <div className="flex justify-center py-2">
+      <div className="flex flex-wrap justify-center gap-3 py-2">
+        <ShareCardButton result={result} />
         <button
           onClick={startNewConversation}
           className="rounded-full border border-current px-6 py-3 text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95"

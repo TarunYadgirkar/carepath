@@ -7,9 +7,12 @@ import { useGrokVoice } from "@/hooks/useGrokVoice";
 import { DEMO_TRANSCRIPT } from "@/mocks/demo-transcript";
 import { saveCareResult } from "@/lib/care-result-storage";
 import { CAREPATH_VOICE_SETTINGS } from "@/data/voice-settings";
+import { syntheticPricing, DEFAULT_PLAN_KEY } from "@/data/synthetic-pricing";
+import { InsurancePlanSelector } from "@/components/InsurancePlanSelector";
 import { SafetyDisclaimer } from "@/components/SafetyDisclaimer";
 import { VoiceOrb, type OrbStatus } from "@/components/VoiceOrb";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { EmergencyBanner, hasEmergencyPhrase } from "@/components/EmergencyBanner";
 
 function isGrokVoiceSupported(): boolean {
   return (
@@ -34,6 +37,7 @@ export default function IntakePage() {
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [grokSupported, setGrokSupported] = useState(false);
   const [useFallbackVoice, setUseFallbackVoice] = useState(false);
+  const [insurancePlanKey, setInsurancePlanKey] = useState(DEFAULT_PLAN_KEY);
 
   useEffect(() => {
     setVoiceSupported(isVoiceConversationSupported());
@@ -47,7 +51,7 @@ export default function IntakePage() {
         const res = await fetch("/api/classify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transcript }),
+          body: JSON.stringify({ transcript, insurancePlan: insurancePlanKey }),
         });
         const data = await res.json();
         saveCareResult(data);
@@ -56,11 +60,11 @@ export default function IntakePage() {
         setClassifying(false);
       }
     },
-    [router]
+    [router, insurancePlanKey]
   );
 
-  const fallbackVoice = useVoiceConversation(classify);
-  const grokVoice = useGrokVoice(classify);
+  const fallbackVoice = useVoiceConversation(classify, "triage");
+  const grokVoice = useGrokVoice(classify, "triage", syntheticPricing.plans[insurancePlanKey]?.name);
 
   const runDemo = useCallback(async () => {
     setDemoTranscript(null);
@@ -86,6 +90,11 @@ export default function IntakePage() {
     status === "thinking" ||
     status === "speaking";
 
+  const liveTranscript = useFallbackVoice
+    ? `${fallbackVoice.interimTranscript} ${fallbackVoice.messages.map((m) => m.content).join(" ")}`
+    : `${grokVoice.patientTranscript} ${grokVoice.aiTranscript}`;
+  const showEmergencyBanner = hasEmergencyPhrase(liveTranscript);
+
   const liveHint = useFallbackVoice
     ? status === "listening" && fallbackVoice.interimTranscript
       ? `You: ${fallbackVoice.interimTranscript}`
@@ -102,6 +111,8 @@ export default function IntakePage() {
 
       <SafetyDisclaimer />
 
+      <EmergencyBanner show={showEmergencyBanner} />
+
       <section className="flex w-full max-w-xl flex-col items-center gap-4 rounded-2xl bg-white p-6 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
         <div className="flex flex-wrap items-center justify-center gap-2">
           <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-medium text-[var(--accent)]">
@@ -113,6 +124,14 @@ export default function IntakePage() {
         </div>
 
         <VoiceOrb status={status} />
+
+        {!conversationActive && (
+          <InsurancePlanSelector
+            value={insurancePlanKey}
+            onChange={setInsurancePlanKey}
+            disabled={classifying}
+          />
+        )}
 
         {conversationActive ? (
           <button

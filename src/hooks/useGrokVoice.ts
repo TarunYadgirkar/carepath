@@ -2,21 +2,10 @@
 
 import { useCallback, useRef, useState } from "react";
 import { AudioPlaybackQueue, startAudioCapture, type AudioCapture } from "@/lib/audio";
+import { buildMedCardContext, getMedCard } from "@/lib/medcard";
+import { VOICE_INSTRUCTIONS, type ConversationMode } from "@/lib/mode-prompts";
 
 export type VoiceStatus = "idle" | "connecting" | "active" | "ended" | "error";
-
-const INTAKE_INSTRUCTIONS = `You are CarePath, a calm voice intake assistant. Ask short, plain-language
-questions one at a time to learn: the patient's main symptom and how long they've had it,
-whether they have any red-flag symptoms (trouble breathing, chest pain, confusion, severe
-bleeding, loss of consciousness), their current medications and allergies, and their
-insurance plan and remaining deductible if known.
-
-You have access to web_search. Use it proactively when the patient mentions a specific
-medication, diagnosis, or condition you want to verify — search before giving any
-information about it. Keep spoken responses brief (1-2 sentences). Once you have enough
-information, call the end_consultation function with a clean summary of what the patient
-said. You are a navigation tool, not a diagnosis system — never diagnose, and if the
-patient describes a clear emergency, tell them to call 911 immediately.`;
 
 interface UseGrokVoiceResult {
   status: VoiceStatus;
@@ -28,7 +17,9 @@ interface UseGrokVoiceResult {
 }
 
 export function useGrokVoice(
-  onConsultationEnd: (transcriptSummary: string) => void
+  onConsultationEnd: (transcriptSummary: string) => void,
+  mode: ConversationMode = "triage",
+  insurancePlanName?: string
 ): UseGrokVoiceResult {
   const [status, setStatus] = useState<VoiceStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +71,12 @@ export function useGrokVoice(
             type: "session.update",
             session: {
               voice: "eve",
-              instructions: INTAKE_INSTRUCTIONS,
+              instructions:
+                VOICE_INSTRUCTIONS[mode] +
+                buildMedCardContext(getMedCard()) +
+                (insurancePlanName
+                  ? `\n\nThe patient's insurance plan is: ${insurancePlanName}. Use this for any cost-related context.`
+                  : ""),
               turn_detection: { type: "server_vad" },
               input_audio_transcription: { model: "grok-2-audio" },
               audio: {
@@ -177,7 +173,7 @@ export function useGrokVoice(
       setStatus("error");
       cleanup();
     }
-  }, [cleanup, onConsultationEnd]);
+  }, [cleanup, onConsultationEnd, mode, insurancePlanName]);
 
   return { status, error, patientTranscript, aiTranscript, start, stop };
 }
