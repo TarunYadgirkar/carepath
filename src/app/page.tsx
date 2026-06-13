@@ -140,7 +140,7 @@ export default function Home() {
           className="animate-fade-up stagger-1 mb-4 text-xs font-semibold uppercase tracking-[0.2em]"
           style={{ color: "var(--accent)" }}
         >
-          Voice-first patient navigation
+          Your personal healthcare center
         </p>
 
         {/* Display headline — Fraunces for warmth and authority */}
