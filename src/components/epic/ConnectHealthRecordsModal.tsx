@@ -17,6 +17,11 @@ const CONNECT_DELAY_MS = 2000;
 export function ConnectHealthRecordsModal({ onClose }: Props) {
   const [step, setStep] = useState<Step>("select");
   const [system, setSystem] = useState<EpicSystem | null>(null);
+  const [search, setSearch] = useState("");
+
+  const filteredSystems = EPIC_SYSTEMS.filter((sys) =>
+    sys.name.toLowerCase().includes(search.trim().toLowerCase())
+  );
 
   useEffect(() => {
     if (step !== "connecting" || !system) return;
@@ -44,8 +49,18 @@ export function ConnectHealthRecordsModal({ onClose }: Props) {
           <>
             <h2 className="text-lg font-semibold">Connect Health Records</h2>
             <p className="mt-1 text-sm text-zinc-500">Select your health system</p>
-            <div className="mt-4 flex flex-col gap-2">
-              {EPIC_SYSTEMS.map((sys) => (
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search health systems…"
+              className="mt-3 w-full rounded-xl border border-zinc-200 px-4 py-2 text-sm focus:border-[var(--accent)] focus:outline-none dark:border-zinc-800 dark:bg-zinc-900"
+            />
+            <div className="mt-3 flex max-h-64 flex-col gap-2 overflow-y-auto pr-1">
+              {filteredSystems.length === 0 && (
+                <p className="py-4 text-center text-sm text-zinc-500">No health systems match &quot;{search}&quot;.</p>
+              )}
+              {filteredSystems.map((sys) => (
                 <button
                   key={sys.id}
                   type="button"

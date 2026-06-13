@@ -20,6 +20,8 @@ export function CareCardView({ result }: { result: CarePathResult }) {
       <CareOptionsTable
         options={result.careOptions}
         recommendedCareLevel={result.recommendedCareLevel}
+        insurancePlan={result.insurancePlan}
+        deductibleRemaining={result.deductibleRemaining}
       />
       <ListSection title="Red flags — seek immediate care if these occur" items={result.redFlags} variant="warning" />
       <MedCard

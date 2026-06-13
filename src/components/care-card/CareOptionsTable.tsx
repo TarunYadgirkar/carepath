@@ -3,6 +3,8 @@ import type { CareLevel, CareOption } from "@/types/carepath";
 type Props = {
   options: CareOption[];
   recommendedCareLevel: CareLevel;
+  insurancePlan?: string;
+  deductibleRemaining?: number;
 };
 
 const FIT_STYLES: Record<CareOption["medicalFit"], string> = {
@@ -11,7 +13,7 @@ const FIT_STYLES: Record<CareOption["medicalFit"], string> = {
   high: "bg-emerald-100 text-emerald-900",
 };
 
-export function CareOptionsTable({ options, recommendedCareLevel }: Props) {
+export function CareOptionsTable({ options, recommendedCareLevel, insurancePlan, deductibleRemaining }: Props) {
   if (options.length === 0) return null;
 
   return (
@@ -66,6 +68,19 @@ export function CareOptionsTable({ options, recommendedCareLevel }: Props) {
           </tbody>
         </table>
       </div>
+      <p className="mt-3 text-xs text-zinc-500">
+        {insurancePlan && (
+          <>
+            Based on your <span className="font-medium">{insurancePlan}</span> plan
+            {typeof deductibleRemaining === "number" && (
+              <> (~${deductibleRemaining.toLocaleString()} left on your deductible)</>
+            )}
+            .{" "}
+          </>
+        )}
+        These are estimates, not bills — your actual cost depends on the visit, provider, and
+        how much of your deductible you&apos;ve met.
+      </p>
     </section>
   );
 }

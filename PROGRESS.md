@@ -327,6 +327,20 @@ Browser mic → AudioWorklet/ScriptProcessor (PCM16 24kHz) → wss://api.x.ai/v1
 
 ---
 
+## Phase 11 — Bugfixes from local testing ⏱ done 2026-06-13
+
+- [x] **Grok Voice cancel bug**: `useGrokVoice.ts` sent `response.cancel` on every `input_audio_buffer.speech_started`, even when no response was in flight. Grok returned a "Cancellation failed: no active response found" `error` event, which the handler treated as fatal (`cleanup()` + status `error`), silently killing the session on the user's first interruption. Now tracks `responseActiveRef` (set on `response.created`, cleared on `response.done`/`response.cancelled`) and only cancels an in-flight response; also ignores that specific error message defensively.
+- [x] `SafetyDisclaimer.tsx` — added a second line: records/medications/care cards are stored only in the browser, never on a server or database.
+- [x] `src/data/epic-mock.ts` — expanded `EPIC_SYSTEMS` from 3 to 23 major US Epic-client health systems (Stanford, Mayo, Cleveland Clinic, Mass General Brigham, Johns Hopkins, etc.)
+- [x] `ConnectHealthRecordsModal.tsx` — added search input + scrollable (`max-h-64`) list for the health system picker
+- [x] `CareOptionsTable.tsx` / `CareCardView.tsx` — added a footer line under the cost table showing the selected insurance plan + remaining deductible, plus an "estimates, not bills" disclaimer to soften pricing display
+
+**Notes:**
+- `npx tsc --noEmit` passes clean.
+- Verified `OPENAI_API_KEY` and `XAI_API_KEY` both valid via curl (models + chat completion test) — the "voice conversation isn't available" symptom was very likely the Grok cancel bug above, not a dead key. Needs retest against the Vercel deployment.
+
+---
+
 ## Known Issues / Blockers
 
 - **xAI Realtime — RESOLVED 2026-06-13 (Phase 7).** The 403 was caused by calling a nonexistent endpoint (`/v1/realtime/sessions`) with the wrong WebSocket subprotocol — not an account permission gap. Fixed to `/v1/realtime/client_secrets` + `xai-client-secret.<token>` subprotocol. Token minting verified via curl. Full WS round-trip (audio in/out) still needs a human mic test in Chrome — see Phase 7.

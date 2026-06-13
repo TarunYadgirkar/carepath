@@ -30,6 +30,7 @@ export function useGrokVoice(
   const wsRef = useRef<WebSocket | null>(null);
   const captureRef = useRef<AudioCapture | null>(null);
   const playbackRef = useRef<AudioPlaybackQueue | null>(null);
+  const responseActiveRef = useRef(false);
 
   const cleanup = useCallback(() => {
     captureRef.current?.stop();
@@ -127,7 +128,19 @@ export function useGrokVoice(
         switch (msg.type) {
           case "input_audio_buffer.speech_started":
             playbackRef.current?.clear();
-            ws.send(JSON.stringify({ type: "response.cancel" }));
+            if (responseActiveRef.current) {
+              ws.send(JSON.stringify({ type: "response.cancel" }));
+              responseActiveRef.current = false;
+            }
+            break;
+
+          case "response.created":
+            responseActiveRef.current = true;
+            break;
+
+          case "response.done":
+          case "response.cancelled":
+            responseActiveRef.current = false;
             break;
 
           case "response.output_audio.delta":
@@ -157,11 +170,16 @@ export function useGrokVoice(
             }
             break;
 
-          case "error":
-            setError(msg.error?.message ?? "Grok Voice error");
+          case "error": {
+            const message: string = msg.error?.message ?? "Grok Voice error";
+            // response.cancel can race with the server already finishing the
+            // response — harmless, don't tear down the session for it.
+            if (/no active response/i.test(message)) break;
+            setError(message);
             setStatus("error");
             cleanup();
             break;
+          }
         }
       };
 
