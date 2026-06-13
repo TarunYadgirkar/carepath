@@ -296,8 +296,12 @@ export default function Home() {
         <button
           type="button"
           onClick={handleResetAll}
-          className="min-h-[44px] rounded-full px-5 py-2 text-xs font-medium transition-colors duration-150 hover:opacity-80"
-          style={{ color: "var(--text-subtle)", border: "1px solid var(--border)" }}
+          className="min-h-[44px] rounded-full px-5 py-2 text-xs font-semibold transition-opacity duration-150 hover:opacity-80"
+          style={{
+            color: "var(--care-er-text)",
+            background: "var(--care-er-bg)",
+            border: "1px solid var(--care-er-border)",
+          }}
         >
           Reset all data
         </button>
