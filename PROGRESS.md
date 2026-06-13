@@ -14,11 +14,11 @@
 
 | Field | Value |
 |---|---|
-| **Current Phase** | Phase 0 — In progress |
+| **Current Phase** | Phase 1 — Done, starting Phase 2 |
 | **Last Updated** | 2026-06-13 |
 | **Last Tool Used** | Claude Code |
 | **Vercel URL** | Not deployed yet |
-| **GitHub Repo** | Not pushed yet |
+| **GitHub Repo** | https://github.com/TarunYadgirkar/carepath |
 
 ---
 
@@ -57,14 +57,24 @@
 ### Phase 1 — Core AI Pipeline ⏱ ~60 min
 *Goal: A transcript (live or fallback) becomes a valid CarePathResult JSON.*
 
-- [ ] `/app/api/classify/route.ts` — accepts transcript string, returns `CarePathResult` JSON
-- [ ] System prompt in place (see `.claude/skills/care-classifier/SKILL.md`)
-- [ ] Response parses cleanly against `src/types/carepath.ts` schema
-- [ ] Fallback: if parse fails, return `src/mocks/demo-result.ts` pre-computed result
-- [ ] Raw JSON renders on screen — confirm schema is correct before building UI
+- [x] `/app/api/classify/route.ts` — accepts transcript string, returns `CarePathResult` JSON
+- [x] System prompt in place (see `.claude/skills/care-classifier/SKILL.md`)
+- [x] Response parses cleanly against `src/types/carepath.ts` schema
+- [x] Fallback: if parse fails (or `OPENAI_API_KEY` missing), return `mockCarePathResult`
+- [x] Raw JSON renders on screen via `/intake` (already wired in Phase 0)
 
-**Status:** Not started
-**Notes / Blockers:** —
+**Status:** Done.
+
+**What was built:**
+- Real OpenAI call: `gpt-4o-mini`, `response_format: { type: "json_object" }`, system prompt from `.claude/skills/care-classifier/SKILL.md` built per synthetic insurance plan (`src/data/synthetic-pricing.ts`, default `BlueShield Silver PPO`).
+- Emergency keyword pre-check (chest pain, can't breathe, unconscious, etc.) short-circuits to `emergency_room` / high confidence before calling OpenAI.
+- `OPENAI_API_KEY` lazily instantiated inside the handler (not at module scope) — empty key during local build/`collectPageData` was throwing "Missing credentials" and failing `npm run build`. Missing key now returns `mockCarePathResult` directly.
+- Any parse failure / invalid shape / missing key → `mockCarePathResult`, always HTTP 200.
+- Verified locally (no `OPENAI_API_KEY` set): normal transcript → mock result; "I have chest pain" → `emergency_room`/`high` via keyword override.
+- `npm run type-check` and `npm run build` both pass.
+
+**Notes / Blockers:**
+- Real `gpt-4o-mini` path (with live `OPENAI_API_KEY`) untested locally — key only set in Vercel env. Should be exercised on next Vercel deploy or by adding a real key to `.env.local`.
 
 ---
 
