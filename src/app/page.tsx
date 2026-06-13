@@ -1,23 +1,50 @@
-import Link from "next/link";
+"use client";
+
+import { useEffect, useState } from "react";
 import { SafetyDisclaimer } from "@/components/SafetyDisclaimer";
 import { ConnectHealthRecordsButton } from "@/components/epic/ConnectHealthRecordsButton";
+import { ModeCard } from "@/components/hub/ModeCard";
+import { getMedCard } from "@/lib/medcard";
 
-const STEPS = [
+const MODES = [
   {
-    label: "Tell it what's wrong",
-    detail: "A short voice conversation about your symptoms, meds, and insurance.",
+    href: "/intake",
+    badge: "Pre-Visit",
+    headline: "Don't know where to go?",
+    sub: "Describe your symptoms. Get a care recommendation and cost estimate.",
+    accent: "blue" as const,
   },
   {
-    label: "Get your care level",
-    detail: "Self-care, telehealth, primary care, urgent care, or ER — with reasoning.",
+    href: "/debrief",
+    badge: "Post-Visit",
+    headline: "Just left the doctor?",
+    sub: "Describe what you were told. Get a plain-language explanation and next steps.",
+    accent: "green" as const,
   },
   {
-    label: "See cost & next steps",
-    detail: "Estimated cost, red flags, what to bring, and what to say at check-in.",
+    href: "/medcard",
+    badge: "Ongoing",
+    headline: "Know your medications",
+    sub: "Speak your medications and allergies. Get a shareable card and interaction check.",
+    accent: "purple" as const,
+  },
+  {
+    href: "/signal",
+    badge: "Ongoing",
+    headline: "How have you been feeling?",
+    sub: "A short voice check-in. CarePath notes what to bring up with your provider.",
+    accent: "amber" as const,
   },
 ];
 
 export default function Home() {
+  const [hasMedCard, setHasMedCard] = useState(false);
+
+  useEffect(() => {
+    const medCard = getMedCard();
+    setHasMedCard(Boolean(medCard && (medCard.medications.length || medCard.allergies.length || medCard.conditions.length)));
+  }, []);
+
   return (
     <main className="relative flex flex-1 flex-col items-center overflow-hidden px-6 py-24 text-center">
       <div
@@ -26,7 +53,7 @@ export default function Home() {
       />
 
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
-        Voice-first care navigation
+        Your personal healthcare center
       </p>
       <h1 className="mt-3 text-5xl font-semibold tracking-tight sm:text-6xl">CarePath</h1>
       <p className="mt-4 max-w-md text-lg text-zinc-600 dark:text-zinc-400">
@@ -34,32 +61,23 @@ export default function Home() {
         bring.
       </p>
 
-      <Link
-        href="/intake"
-        className="mt-8 rounded-full bg-[var(--accent)] px-8 py-3 font-medium text-white transition-transform duration-150 hover:scale-105 active:scale-95"
-      >
-        Start
-      </Link>
-
-      <div className="mt-4">
-        <ConnectHealthRecordsButton />
-      </div>
-
-      <section aria-labelledby="how-it-works" className="mt-20 grid w-full max-w-3xl gap-6 sm:grid-cols-3">
-        <h2 id="how-it-works" className="sr-only">
-          How CarePath works
+      <section aria-labelledby="modes" className="mt-12 grid w-full max-w-2xl gap-4 sm:grid-cols-2">
+        <h2 id="modes" className="sr-only">
+          Choose what you need
         </h2>
-        {STEPS.map((step, i) => (
-          <div
-            key={step.label}
-            className="rounded-2xl bg-white p-5 text-left ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800"
-          >
-            <span className="text-xs font-semibold text-[var(--accent)]">Step {i + 1}</span>
-            <h3 className="mt-1 font-semibold">{step.label}</h3>
-            <p className="mt-1 text-sm text-zinc-500">{step.detail}</p>
-          </div>
+        {MODES.map((mode) => (
+          <ModeCard key={mode.href} {...mode} />
         ))}
       </section>
+
+      <div className="mt-8 flex flex-col items-center gap-3">
+        <ConnectHealthRecordsButton />
+        {hasMedCard && (
+          <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-medium text-[var(--accent)]">
+            Medications on file
+          </span>
+        )}
+      </div>
 
       <div className="mt-16">
         <SafetyDisclaimer />

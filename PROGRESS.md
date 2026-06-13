@@ -309,6 +309,24 @@ Browser mic → AudioWorklet/ScriptProcessor (PCM16 24kHz) → wss://api.x.ai/v1
 
 ---
 
+## Phase 10 — Landing Hub + Debrief/MedCard/Signal Modes ⏱ done 2026-06-13
+
+*Goal: 4-mode "Personal Healthcare Center" hub, plus the three new voice modes sharing the existing pipeline.*
+
+- [x] `src/components/hub/ModeCard.tsx` + rewrote `src/app/page.tsx` — 2x2 mode grid (Triage/Debrief/MedCard/Signal), accent colors blue/green/purple/amber, "Medications on file" badge if `getMedCard()` has data, `ConnectHealthRecordsButton`
+- [x] `src/components/voice/VoiceConversationPanel.tsx` — extracted shared voice UI (orb, transcript, fallback switch, emergency banner) from `/intake`, parameterized by `ConversationMode`; `/intake` refactored to use it (no behavior change, demo conversation preserved)
+- [x] `src/app/debrief/page.tsx` + `src/components/debrief/DebriefCardView.tsx` — Debrief mode, posts `mode: "debrief"` to `/api/classify`, renders `DebriefResult` (what the doctor said → key facts → next step → flagged concerns → MedCard → questions → what to bring → red flags), calls `saveMedCard`
+- [x] `src/app/medcard/page.tsx` + `src/components/medcard/MedCardResultView.tsx` + `DownloadMedCardButton.tsx` — MedCard mode, posts `mode: "medcard"`, renders `MedCardResult` with severity-badged interactions, `toPng()` download via html-to-image on `#medcard-export`, includes `ConnectHealthRecordsButton`
+- [x] `src/app/signal/page.tsx` + `src/components/signal/SignalCardView.tsx` — Signal mode, posts `mode: "signal"`, explicit "not therapy / 988" framing always visible, renders `SignalResult` (themes → what to tell provider → positive observations → questions → follow-up → resources → disclaimer), no severity score shown
+- [x] Each new mode's "Run Demo" button calls `/api/classify` with an empty transcript — server returns the relevant mock result (`mockDebriefResult`/`mockMedCardResult`/`mockSignalResult`)
+
+**Notes:**
+- `npx next build` passes clean (all 4 mode routes + `/records` statically generated).
+- Pre-existing `react-hooks/set-state-in-effect` ESLint warning pattern (load-from-localStorage-on-mount) now also appears in `src/app/page.tsx` and `VoiceConversationPanel.tsx` — consistent with `/card` and `/card/[id]`, not a new issue.
+- Expansion plan (`carepath-expansion.md`) build order is now fully complete (Tasks 1–9 done).
+
+---
+
 ## Known Issues / Blockers
 
 - **xAI Realtime — RESOLVED 2026-06-13 (Phase 7).** The 403 was caused by calling a nonexistent endpoint (`/v1/realtime/sessions`) with the wrong WebSocket subprotocol — not an account permission gap. Fixed to `/v1/realtime/client_secrets` + `xai-client-secret.<token>` subprotocol. Token minting verified via curl. Full WS round-trip (audio in/out) still needs a human mic test in Chrome — see Phase 7.
