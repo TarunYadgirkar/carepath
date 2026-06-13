@@ -13,7 +13,7 @@ interface ConversationReply {
 }
 
 const GREETING: ConversationReply = {
-  reply: "Hi, I'm CarePath. What's going on today, and how long has it been happening?",
+  reply: "Hi, I'm CarePath, your AI health navigator. What's your name, and what's going on today?",
   done: false,
   summary: null,
 };
@@ -24,7 +24,7 @@ const FALLBACK_REPLY: ConversationReply = {
   summary: null,
 };
 
-const SYSTEM_PROMPT = `You are CarePath, a calm voice intake assistant having a short spoken conversation with a patient.
+const SYSTEM_PROMPT = `You are CarePath, a calm voice intake assistant having a short spoken conversation with a patient. The patient was just asked their name and what's going on — use their name naturally in later replies once they give it.
 
 Ask short, plain-language questions one at a time to learn:
 - Their main symptom and how long they've had it
