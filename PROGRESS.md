@@ -341,6 +341,18 @@ Browser mic → AudioWorklet/ScriptProcessor (PCM16 24kHz) → wss://api.x.ai/v1
 
 ---
 
+## Phase 12 — Transcript fix + mode prompt scope pass ⏱ done 2026-06-13
+
+- [x] **Grok transcript not back-and-forth / `patientTranscript is not defined` ReferenceError**: `useGrokVoice.ts` refactored from two append-only `patientTranscript`/`aiTranscript` strings to a `messages: GrokTranscriptMessage[]` array, with a fresh assistant bubble pushed on `response.created` and deltas appended to the last assistant message. `VoiceConversationPanel.tsx` unified into one shared message-bubble renderer for both Grok and fallback voice paths.
+- [x] Triage prompts (`VOICE_INSTRUCTIONS.triage`, `CONVERSATION_SYSTEM_PROMPTS.triage`, classify `buildSystemPrompt`) rewritten with explicit 5-level care taxonomy, adjacent-level differentiation guidance, insurance/deductible questioning, and symptom-specific test/lab/imaging questions in `questionsToAsk`.
+- [x] Debrief/medcard/signal prompts (`VOICE_INSTRUCTIONS` and `CONVERSATION_SYSTEM_PROMPTS`) sharpened to cover full scope: debrief now asks about new prescriptions (name/dosage) and warning signs to return sooner; medcard now asks about OTC meds/vitamins/supplements and what each medication is for; signal now asks about duration of feelings and rotates through sleep/energy/stress topics while reflecting positive observations.
+
+**Notes:**
+- `npx tsc --noEmit` passes clean.
+- Calendar/symptom-log and camera/pill-bottle-scan features discussed but not started — both feasible without a database (localStorage pattern) or new API keys (camera feature would reuse `OPENAI_API_KEY` via gpt-4o-mini vision in a new `/api/scan-label` route).
+
+---
+
 ## Known Issues / Blockers
 
 - **xAI Realtime — RESOLVED 2026-06-13 (Phase 7).** The 403 was caused by calling a nonexistent endpoint (`/v1/realtime/sessions`) with the wrong WebSocket subprotocol — not an account permission gap. Fixed to `/v1/realtime/client_secrets` + `xai-client-secret.<token>` subprotocol. Token minting verified via curl. Full WS round-trip (audio in/out) still needs a human mic test in Chrome — see Phase 7.
