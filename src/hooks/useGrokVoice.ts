@@ -8,11 +8,15 @@ import { VOICE_INSTRUCTIONS, type ConversationMode } from "@/lib/mode-prompts";
 
 export type VoiceStatus = "idle" | "connecting" | "active" | "ended" | "error";
 
+export interface GrokTranscriptMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
 interface UseGrokVoiceResult {
   status: VoiceStatus;
   error: string | null;
-  patientTranscript: string;
-  aiTranscript: string;
+  messages: GrokTranscriptMessage[];
   start: () => Promise<void>;
   stop: () => void;
 }
@@ -24,8 +28,7 @@ export function useGrokVoice(
 ): UseGrokVoiceResult {
   const [status, setStatus] = useState<VoiceStatus>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [patientTranscript, setPatientTranscript] = useState("");
-  const [aiTranscript, setAiTranscript] = useState("");
+  const [messages, setMessages] = useState<GrokTranscriptMessage[]>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
   const captureRef = useRef<AudioCapture | null>(null);
@@ -49,8 +52,7 @@ export function useGrokVoice(
   const start = useCallback(async () => {
     setStatus("connecting");
     setError(null);
-    setPatientTranscript("");
-    setAiTranscript("");
+    setMessages([]);
 
     try {
       const tokenRes = await fetch("/api/realtime-token", { method: "POST" });
@@ -136,10 +138,10 @@ export function useGrokVoice(
 
           case "response.created":
             responseActiveRef.current = true;
-            // Each new AI turn starts its own transcript — without this the
-            // previous turn's text stays and new deltas just pile on after
-            // it, making the transcript look like it's repeating itself.
-            setAiTranscript("");
+            // Start a fresh assistant bubble for this turn so the transcript
+            // reads as a back-and-forth conversation instead of one
+            // ever-growing block of text.
+            setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
             break;
 
           case "response.done":
@@ -152,11 +154,15 @@ export function useGrokVoice(
             break;
 
           case "response.output_audio_transcript.delta":
-            setAiTranscript((prev) => prev + msg.delta);
+            setMessages((prev) => {
+              if (prev.length === 0 || prev[prev.length - 1].role !== "assistant") return prev;
+              const last = prev[prev.length - 1];
+              return [...prev.slice(0, -1), { ...last, content: last.content + msg.delta }];
+            });
             break;
 
           case "conversation.item.input_audio_transcription.completed":
-            setPatientTranscript((prev) => prev + (prev ? "\n" : "") + msg.transcript);
+            setMessages((prev) => [...prev, { role: "user", content: msg.transcript }]);
             break;
 
           case "response.function_call_arguments.done":
@@ -199,5 +205,5 @@ export function useGrokVoice(
     }
   }, [cleanup, onConsultationEnd, mode, insurancePlanName]);
 
-  return { status, error, patientTranscript, aiTranscript, start, stop };
+  return { status, error, messages, start, stop };
 }

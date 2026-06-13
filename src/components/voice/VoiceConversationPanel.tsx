@@ -62,14 +62,14 @@ export function VoiceConversationPanel({
   const error = useFallbackVoice ? fallbackVoice.error : grokVoice.error;
   const start = useFallbackVoice ? fallbackVoice.start : grokVoice.start;
   const stop = useFallbackVoice ? fallbackVoice.stop : grokVoice.stop;
-  const messages = useFallbackVoice ? fallbackVoice.messages : [];
+  const messages = useFallbackVoice ? fallbackVoice.messages : grokVoice.messages;
 
   const conversationActive =
     status === "connecting" || status === "listening" || status === "thinking" || status === "speaking";
 
   const liveTranscript = useFallbackVoice
-    ? `${fallbackVoice.interimTranscript} ${fallbackVoice.messages.map((m) => m.content).join(" ")}`
-    : `${grokVoice.patientTranscript} ${grokVoice.aiTranscript}`;
+    ? `${fallbackVoice.interimTranscript} ${messages.map((m) => m.content).join(" ")}`
+    : messages.map((m) => m.content).join(" ");
   const showEmergencyBanner = hasEmergencyPhrase(liveTranscript);
 
   const liveHint = useFallbackVoice
@@ -78,7 +78,7 @@ export function VoiceConversationPanel({
       : status === "speaking" && fallbackVoice.speakingText
         ? `CarePath: ${fallbackVoice.speakingText}`
         : STATUS_HINT[status] ?? null
-    : grokVoice.patientTranscript || grokVoice.aiTranscript
+    : messages.length > 0
       ? null
       : STATUS_HINT[status] ?? null;
 
@@ -134,7 +134,7 @@ export function VoiceConversationPanel({
           </button>
         )}
 
-        {(conversationActive || messages.length > 0 || grokVoice.patientTranscript || grokVoice.aiTranscript) && (
+        {(conversationActive || messages.length > 0) && (
           <div
             className="flex w-full flex-col gap-3 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900"
             aria-live="polite"
@@ -148,42 +148,23 @@ export function VoiceConversationPanel({
               </p>
             )}
 
-            {useFallbackVoice ? (
-              messages.length > 0 ? (
-                <div className="flex max-h-64 flex-col gap-2 overflow-y-auto text-sm">
-                  {messages.map((message, i) => (
-                    <div
-                      key={i}
-                      className={`rounded-lg p-3 ${
-                        message.role === "user"
-                          ? "self-end bg-[var(--accent-soft)] text-right"
-                          : "self-start bg-white dark:bg-zinc-950"
-                      }`}
-                    >
-                      <p className="mb-1 text-xs font-medium text-zinc-500">
-                        {message.role === "user" ? "You" : "CarePath"}
-                      </p>
-                      <p className="whitespace-pre-wrap">{message.content}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-zinc-500">Transcript will appear here as you talk.</p>
-              )
-            ) : grokVoice.patientTranscript || grokVoice.aiTranscript ? (
+            {messages.length > 0 ? (
               <div className="flex max-h-64 flex-col gap-2 overflow-y-auto text-sm">
-                {grokVoice.patientTranscript && (
-                  <div className="self-end rounded-lg bg-[var(--accent-soft)] p-3 text-right">
-                    <p className="mb-1 text-xs font-medium text-zinc-500">You</p>
-                    <p className="whitespace-pre-wrap">{grokVoice.patientTranscript}</p>
+                {messages.map((message, i) => (
+                  <div
+                    key={i}
+                    className={`rounded-lg p-3 ${
+                      message.role === "user"
+                        ? "self-end bg-[var(--accent-soft)] text-right"
+                        : "self-start bg-white dark:bg-zinc-950"
+                    }`}
+                  >
+                    <p className="mb-1 text-xs font-medium text-zinc-500">
+                      {message.role === "user" ? "You" : "CarePath"}
+                    </p>
+                    <p className="whitespace-pre-wrap">{message.content}</p>
                   </div>
-                )}
-                {grokVoice.aiTranscript && (
-                  <div className="self-start rounded-lg bg-white p-3 dark:bg-zinc-950">
-                    <p className="mb-1 text-xs font-medium text-zinc-500">CarePath</p>
-                    <p className="whitespace-pre-wrap">{grokVoice.aiTranscript}</p>
-                  </div>
-                )}
+                ))}
               </div>
             ) : (
               <p className="text-sm text-zinc-500">Transcript will appear here as you talk.</p>
