@@ -16,6 +16,9 @@ interface WindowEntry {
 
 const store = new Map<string, WindowEntry>();
 const WINDOW_MS = 60_000;
+// Maximum number of distinct keys to keep in memory. If exceeded, expired
+// entries are swept first; if still over, the oldest half is evicted.
+const MAX_STORE_KEYS = 10_000;
 
 function getLimit(pathname: string): number {
   if (pathname.startsWith("/api/realtime-token")) return 30;
@@ -24,11 +27,34 @@ function getLimit(pathname: string): number {
   return 60;
 }
 
+function sweepExpired(now: number): void {
+  for (const [key, entry] of store) {
+    if (now - entry.windowStart >= WINDOW_MS) {
+      store.delete(key);
+    }
+  }
+}
+
 function isRateLimited(key: string, limit: number): boolean {
   const now = Date.now();
   const entry = store.get(key);
 
   if (!entry || now - entry.windowStart >= WINDOW_MS) {
+    // Entry expired or missing — evict it before inserting to keep map bounded.
+    if (entry) store.delete(key);
+
+    if (store.size >= MAX_STORE_KEYS) {
+      sweepExpired(now);
+      // If still over capacity after sweeping expired entries, drop the oldest half.
+      if (store.size >= MAX_STORE_KEYS) {
+        let toDrop = Math.floor(store.size / 2);
+        for (const k of store.keys()) {
+          store.delete(k);
+          if (--toDrop === 0) break;
+        }
+      }
+    }
+
     store.set(key, { count: 1, windowStart: now });
     return false;
   }

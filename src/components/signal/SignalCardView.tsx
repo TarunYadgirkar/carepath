@@ -4,28 +4,76 @@ import { ListSection } from "@/components/care-card/ListSection";
 export function SignalCardView({ result }: { result: SignalResult }) {
   return (
     <div className="flex flex-col gap-4">
-      <section className="rounded-2xl bg-white p-6 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">What you shared</h2>
-        <p className="mt-2 text-sm leading-relaxed">{result.patientSummary}</p>
+      {/* What you shared */}
+      <section
+        className="animate-fade-up rounded-[var(--radius-xl)] p-6"
+        style={{
+          background: "var(--surface-2)",
+          border: "1px solid var(--border)",
+        }}
+      >
+        <h2
+          className="text-xs font-semibold uppercase tracking-[0.15em]"
+          style={{ color: "var(--text-subtle)" }}
+        >
+          What you shared
+        </h2>
+        <p className="mt-3 text-base leading-relaxed" style={{ color: "var(--text-primary)" }}>
+          {result.patientSummary}
+        </p>
       </section>
 
-      <ListSection title="Themes noticed" items={result.themesNoticed} />
-      <ListSection title="What to tell your provider" items={result.whatToTellYourProvider} />
-      <ListSection title="Positive observations" items={result.positiveObservations} />
-      <ListSection title="Questions to ask your provider" items={result.questionsToAsk} />
+      <div className="animate-fade-up stagger-1">
+        <ListSection title="Themes noticed" items={result.themesNoticed} />
+      </div>
+      <div className="animate-fade-up stagger-2">
+        <ListSection title="What to tell your provider" items={result.whatToTellYourProvider} />
+      </div>
+      <div className="animate-fade-up stagger-2">
+        <ListSection title="Positive observations" items={result.positiveObservations} />
+      </div>
+      <div className="animate-fade-up stagger-3">
+        <ListSection title="Questions to ask your provider" items={result.questionsToAsk} />
+      </div>
 
-      <section className="rounded-2xl bg-white p-6 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Follow-up</h2>
-        <p className="mt-2 text-sm leading-relaxed">{result.followUpSuggestion}</p>
+      {/* Follow-up */}
+      <section
+        className="animate-fade-up stagger-3 rounded-[var(--radius-xl)] p-6"
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow-sm)",
+        }}
+      >
+        <h2
+          className="text-xs font-semibold uppercase tracking-[0.15em]"
+          style={{ color: "var(--text-subtle)" }}
+        >
+          Follow-up suggestion
+        </h2>
+        <p className="mt-3 text-base leading-relaxed" style={{ color: "var(--text-primary)" }}>
+          {result.followUpSuggestion}
+        </p>
       </section>
 
       {result.resources.length > 0 && (
-        <ListSection title="Resources" items={result.resources} />
+        <div className="animate-fade-up stagger-4">
+          <ListSection title="Resources" items={result.resources} />
+        </div>
       )}
 
-      <section className="rounded-2xl bg-amber-50 p-4 text-center ring-1 ring-amber-200 dark:bg-amber-950/30 dark:ring-amber-900">
-        <p className="text-sm text-amber-900 dark:text-amber-200">{result.disclaimer}</p>
-      </section>
+      {/* Disclaimer — always visible */}
+      <div
+        className="animate-fade-up stagger-5 rounded-[var(--radius-xl)] p-4 text-center"
+        style={{
+          background: "var(--care-urgent-bg)",
+          border: "1px solid var(--care-urgent-border)",
+        }}
+      >
+        <p className="text-sm font-medium leading-relaxed" style={{ color: "var(--care-urgent-text)" }}>
+          {result.disclaimer}
+        </p>
+      </div>
     </div>
   );
 }

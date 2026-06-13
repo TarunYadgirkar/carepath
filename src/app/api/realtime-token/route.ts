@@ -11,15 +11,30 @@ export async function POST() {
     );
   }
 
-  const response = await fetch("https://api.x.ai/v1/realtime/client_secrets", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.XAI_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    // No model here — model goes in the WebSocket URL, not the token request
-    body: JSON.stringify({ expires_after: { seconds: 300 } }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
+  let response: Response;
+  try {
+    response = await fetch("https://api.x.ai/v1/realtime/client_secrets", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      // No model here — model goes in the WebSocket URL, not the token request
+      body: JSON.stringify({ expires_after: { seconds: 300 } }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    console.error("Realtime token fetch error:", err instanceof Error ? err.message : "unknown");
+    return NextResponse.json(
+      { error: "Voice service temporarily unavailable" },
+      { status: 502 }
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     const detail = await response.text();

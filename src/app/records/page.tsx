@@ -21,16 +21,45 @@ export default function RecordsPage() {
 
   if (importState === null) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-24 text-center">
-        <h1 className="text-2xl font-semibold">No health records connected</h1>
-        <p className="max-w-sm text-sm text-zinc-500">
-          Connect your health records from Epic MyChart to see your medications, allergies, lab results, and recent
-          visits here.
-        </p>
-        <ConnectHealthRecordsButton />
-        <Link href="/" className="text-sm text-[var(--accent)] underline">
-          Back home
-        </Link>
+      <main
+        className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-24 text-center"
+      >
+        <div className="animate-fade-up flex flex-col items-center gap-4">
+          <p
+            className="text-xs font-semibold uppercase tracking-[0.2em]"
+            style={{ color: "var(--accent)" }}
+          >
+            Health Records
+          </p>
+          <h1
+            className="font-display text-4xl leading-tight"
+            style={{ color: "var(--text-primary)" }}
+          >
+            No records connected
+          </h1>
+          <p
+            className="max-w-sm text-base leading-relaxed"
+            style={{ color: "var(--text-muted)" }}
+          >
+            Connect your health records from Epic MyChart to see your medications, allergies,
+            lab results, and recent visits here.
+          </p>
+        </div>
+
+        <div className="animate-fade-up stagger-2 flex flex-col items-center gap-3">
+          <ConnectHealthRecordsButton />
+          <Link
+            href="/"
+            className="text-sm transition-colors"
+            style={{ color: "var(--accent)" }}
+          >
+            Back home
+          </Link>
+        </div>
+
+        <div className="animate-fade-up stagger-3">
+          <SafetyDisclaimer />
+        </div>
       </main>
     );
   }
@@ -39,25 +68,51 @@ export default function RecordsPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-12">
-      <header className="text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">Health Records</p>
-        <h1 className="mt-2 text-2xl font-semibold">{record.patient.name}</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+      <header className="animate-fade-up text-center">
+        <p
+          className="text-xs font-semibold uppercase tracking-[0.2em]"
+          style={{ color: "var(--accent)" }}
+        >
+          Health Records
+        </p>
+        <h1
+          className="font-display mt-2 text-3xl leading-snug"
+          style={{ color: "var(--text-primary)" }}
+        >
+          {record.patient.name}
+        </h1>
+        <p className="mt-1 text-sm" style={{ color: "var(--text-muted)" }}>
           DOB {record.patient.dob} · MRN {record.patient.mrn}
         </p>
-        <p className="mt-1 text-xs text-zinc-400">
+        <p className="mt-1 text-xs" style={{ color: "var(--text-subtle)" }}>
           Imported from {systemName} on {new Date(importedAt).toLocaleString()}
         </p>
-        <p className="mt-1 text-xs text-zinc-400">{record.patient.facility}</p>
+        <p className="mt-0.5 text-xs" style={{ color: "var(--text-subtle)" }}>
+          {record.patient.facility}
+        </p>
       </header>
 
-      <section className="rounded-2xl bg-white p-5 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Medications</h2>
-        <ul className="mt-3 flex flex-col gap-3">
+      <section
+        className="animate-fade-up stagger-1 rounded-[var(--radius-xl)] p-6"
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow-sm)",
+        }}
+      >
+        <h2
+          className="text-xs font-semibold uppercase tracking-[0.15em]"
+          style={{ color: "var(--text-subtle)" }}
+        >
+          Medications
+        </h2>
+        <ul className="mt-4 flex flex-col gap-4">
           {record.medications.map((med) => (
             <li key={med.name} className="text-sm">
-              <p className="font-medium">{med.name}</p>
-              <p className="text-zinc-500">
+              <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                {med.name}
+              </p>
+              <p className="mt-0.5" style={{ color: "var(--text-muted)" }}>
                 {med.frequency} — prescribed by {med.prescriber}, started {med.started}
               </p>
             </li>
@@ -65,13 +120,27 @@ export default function RecordsPage() {
         </ul>
       </section>
 
-      <section className="rounded-2xl bg-white p-5 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Allergies</h2>
-        <ul className="mt-3 flex flex-col gap-3">
+      <section
+        className="animate-fade-up stagger-2 rounded-[var(--radius-xl)] p-6"
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow-sm)",
+        }}
+      >
+        <h2
+          className="text-xs font-semibold uppercase tracking-[0.15em]"
+          style={{ color: "var(--text-subtle)" }}
+        >
+          Allergies
+        </h2>
+        <ul className="mt-4 flex flex-col gap-4">
           {record.allergies.map((allergy) => (
             <li key={allergy.substance} className="text-sm">
-              <p className="font-medium">{allergy.substance}</p>
-              <p className="text-zinc-500">
+              <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                {allergy.substance}
+              </p>
+              <p className="mt-0.5" style={{ color: "var(--text-muted)" }}>
                 {allergy.reaction} — {allergy.severity}, recorded {allergy.recorded}
               </p>
             </li>
@@ -79,19 +148,40 @@ export default function RecordsPage() {
         </ul>
       </section>
 
-      <section className="rounded-2xl bg-white p-5 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Lab Results</h2>
-        <ul className="mt-3 flex flex-col gap-3">
+      <section
+        className="animate-fade-up stagger-3 rounded-[var(--radius-xl)] p-6"
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow-sm)",
+        }}
+      >
+        <h2
+          className="text-xs font-semibold uppercase tracking-[0.15em]"
+          style={{ color: "var(--text-subtle)" }}
+        >
+          Lab Results
+        </h2>
+        <ul className="mt-4 flex flex-col divide-y" style={{ borderColor: "var(--border)" }}>
           {record.labResults.map((lab) => (
-            <li key={lab.name} className="flex items-start justify-between gap-3 text-sm">
+            <li
+              key={lab.name}
+              className="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0 text-sm"
+            >
               <div>
-                <p className="font-medium">{lab.name}</p>
-                <p className="text-zinc-500">
+                <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                  {lab.name}
+                </p>
+                <p className="mt-0.5" style={{ color: "var(--text-muted)" }}>
                   {lab.value} · {lab.date}
                 </p>
-                <p className="text-xs text-zinc-400">{lab.reference}</p>
+                <p className="mt-0.5 text-xs" style={{ color: "var(--text-subtle)" }}>
+                  {lab.reference}
+                </p>
               </div>
-              <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${LAB_FLAG_STYLES[lab.flag]}`}>
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${LAB_FLAG_STYLES[lab.flag]}`}
+              >
                 {lab.flag.replace("_", " ")}
               </span>
             </li>
@@ -99,13 +189,27 @@ export default function RecordsPage() {
         </ul>
       </section>
 
-      <section className="rounded-2xl bg-white p-5 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Recent Encounters</h2>
-        <ul className="mt-3 flex flex-col gap-3">
+      <section
+        className="animate-fade-up stagger-4 rounded-[var(--radius-xl)] p-6"
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow-sm)",
+        }}
+      >
+        <h2
+          className="text-xs font-semibold uppercase tracking-[0.15em]"
+          style={{ color: "var(--text-subtle)" }}
+        >
+          Recent Encounters
+        </h2>
+        <ul className="mt-4 flex flex-col gap-4">
           {record.recentEncounters.map((enc) => (
             <li key={`${enc.date}-${enc.type}`} className="text-sm">
-              <p className="font-medium">{enc.type}</p>
-              <p className="text-zinc-500">
+              <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                {enc.type}
+              </p>
+              <p className="mt-0.5" style={{ color: "var(--text-muted)" }}>
                 {enc.date} — {enc.provider}, {enc.facility}
               </p>
             </li>

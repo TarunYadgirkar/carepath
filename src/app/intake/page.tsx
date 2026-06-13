@@ -48,51 +48,107 @@ export default function IntakePage() {
   }, [classify]);
 
   return (
-    <main className="flex flex-1 flex-col items-center gap-6 px-6 py-12">
-      <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-        Pre-Visit · Triage
-      </span>
-      <h1 className="text-2xl font-semibold">CarePath Intake</h1>
+    <main className="flex flex-1 flex-col items-center gap-8 px-6 py-12 animate-fade-up">
+      {/* Page header */}
+      <div className="flex flex-col items-center gap-3 text-center stagger-1 animate-fade-up">
+        <span
+          className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest"
+          style={{
+            background: "var(--care-primary-bg)",
+            color: "var(--care-primary-text)",
+            border: "1px solid var(--care-primary-border)",
+          }}
+        >
+          Pre-Visit · Triage
+        </span>
+        <h1
+          className="font-display text-3xl font-semibold leading-tight tracking-tight"
+          style={{ color: "var(--text-primary)" }}
+        >
+          CarePath Intake
+        </h1>
+        <p className="max-w-sm text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
+          Describe your symptoms naturally. CarePath will help you understand your next best step.
+        </p>
+      </div>
 
-      <SafetyDisclaimer />
+      <div className="stagger-2 animate-fade-up w-full max-w-xl">
+        <SafetyDisclaimer />
+      </div>
 
-      <VoiceConversationPanel
-        mode="triage"
-        onConsultationEnd={classify}
-        insurancePlanName={syntheticPricing.plans[insurancePlanKey]?.name}
-        classifying={classifying}
-        insuranceSelector={
-          <InsurancePlanSelector value={insurancePlanKey} onChange={setInsurancePlanKey} disabled={classifying} />
-        }
-        demoSlot={
-          <div className="flex flex-col items-center gap-4">
-            <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-500 dark:bg-zinc-900">
-              Demo mode
-            </span>
+      <div className="stagger-3 animate-fade-up w-full max-w-xl">
+        <VoiceConversationPanel
+          mode="triage"
+          onConsultationEnd={classify}
+          insurancePlanName={syntheticPricing.plans[insurancePlanKey]?.name}
+          classifying={classifying}
+          insuranceSelector={
+            <InsurancePlanSelector value={insurancePlanKey} onChange={setInsurancePlanKey} disabled={classifying} />
+          }
+          demoSlot={
+            <div className="flex flex-col items-center gap-4">
+              <span
+                className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-widest"
+                style={{
+                  background: "var(--surface-2)",
+                  color: "var(--text-subtle)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                Demo mode
+              </span>
 
-            <button
-              onClick={runDemo}
-              disabled={classifying}
-              className="rounded-full border border-current px-6 py-3 font-medium transition-transform duration-150 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
-            >
-              Run Demo Conversation (Maya Patel)
-            </button>
+              <button
+                onClick={runDemo}
+                disabled={classifying}
+                aria-label="Run demo conversation with Maya Patel"
+                className="min-h-[44px] rounded-full px-6 py-3 text-sm font-medium ring-1 transition-all duration-150 hover:opacity-80 active:scale-95 disabled:pointer-events-none disabled:opacity-40"
+                style={{
+                  background: "var(--surface)",
+                  color: "var(--text-primary)",
+                  borderColor: "var(--border-strong)",
+                  boxShadow: "var(--shadow-xs)",
+                }}
+              >
+                Run Demo Conversation (Maya Patel)
+              </button>
 
-            {demoTranscript && (
-              <pre className="max-w-xl whitespace-pre-wrap rounded-lg bg-zinc-100 p-4 text-sm dark:bg-zinc-900">
-                {demoTranscript}
-              </pre>
-            )}
-          </div>
-        }
-      />
+              {demoTranscript && (
+                <pre
+                  className="w-full max-w-xl whitespace-pre-wrap rounded-xl p-4 text-xs leading-relaxed"
+                  style={{
+                    background: "var(--surface-2)",
+                    color: "var(--text-muted)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  {demoTranscript}
+                </pre>
+              )}
+            </div>
+          }
+        />
+      </div>
 
       {classifyError && (
-        <div role="alert" className="flex max-w-md flex-col items-center gap-3 rounded-2xl bg-red-50 p-4 text-center ring-1 ring-red-200 dark:bg-red-950/30 dark:ring-red-900">
-          <p className="text-sm text-red-900 dark:text-red-200">{classifyError}</p>
+        <div
+          role="alert"
+          className="stagger-4 animate-fade-up flex w-full max-w-md flex-col items-center gap-3 rounded-xl p-4 text-center ring-1"
+          style={{
+            background: "var(--care-er-bg)",
+            borderColor: "var(--care-er-border)",
+          }}
+        >
+          <p className="text-sm leading-relaxed" style={{ color: "var(--care-er-text)" }}>
+            {classifyError}
+          </p>
           <button
             onClick={() => setClassifyError(null)}
-            className="rounded-full border border-red-400 px-5 py-2 text-xs font-medium text-red-700 transition-transform duration-150 hover:scale-105 active:scale-95 dark:border-red-700 dark:text-red-300"
+            className="min-h-[36px] rounded-full px-5 py-1.5 text-xs font-medium ring-1 transition-all duration-150 hover:opacity-80 active:scale-95"
+            style={{
+              color: "var(--care-er-text)",
+              borderColor: "var(--care-er-border)",
+            }}
           >
             Dismiss
           </button>

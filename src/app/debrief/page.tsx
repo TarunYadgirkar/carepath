@@ -39,56 +39,103 @@ export default function DebriefPage() {
   const runDemo = useCallback(() => classify(""), [classify]);
 
   return (
-    <main className="flex flex-1 flex-col items-center gap-6 px-6 py-12">
-      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-        Post-Visit · Debrief
-      </span>
-      <h1 className="text-2xl font-semibold">CarePath Debrief</h1>
-      <p className="max-w-md text-center text-sm text-zinc-500">
-        Just left an appointment? Describe what your doctor told you and get a plain-language explanation, key
-        facts, and next steps.
-      </p>
+    <main className="flex flex-1 flex-col items-center gap-8 px-6 py-12">
+      <div className="animate-fade-up flex flex-col items-center gap-3 text-center">
+        <span
+          className="rounded-full px-3 py-1 text-xs font-semibold"
+          style={{
+            background: "var(--care-self-bg)",
+            color: "var(--care-self-text)",
+            border: "1px solid var(--care-self-border)",
+          }}
+        >
+          Post-Visit · Debrief
+        </span>
+        <h1
+          className="font-display text-4xl leading-tight"
+          style={{ color: "var(--text-primary)" }}
+        >
+          CarePath Debrief
+        </h1>
+        <p className="max-w-md text-base leading-relaxed" style={{ color: "var(--text-muted)" }}>
+          Just left an appointment? Describe what your doctor told you and get a plain-language
+          summary, key facts, and next steps.
+        </p>
+      </div>
 
-      <SafetyDisclaimer />
+      <div className="animate-fade-up stagger-1">
+        <SafetyDisclaimer />
+      </div>
 
       {result ? (
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+        <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-4">
           <DebriefCardView result={result} />
           <button
             onClick={() => setResult(null)}
-            className="self-center rounded-full border border-current px-6 py-3 text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95"
+            className="self-center rounded-full px-6 py-3 text-sm font-semibold transition-all duration-[var(--duration-normal)] hover:scale-105 active:scale-95 min-h-[44px]"
+            style={{
+              border: "1px solid var(--border-strong)",
+              color: "var(--text-primary)",
+              background: "var(--surface)",
+            }}
           >
             Start New Debrief
           </button>
         </div>
       ) : (
-        <VoiceConversationPanel
-          mode="debrief"
-          onConsultationEnd={classify}
-          classifying={classifying}
-          demoSlot={
-            <div className="flex flex-col items-center gap-4">
-              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-500 dark:bg-zinc-900">
-                Demo mode
-              </span>
-              <button
-                onClick={runDemo}
-                disabled={classifying}
-                className="rounded-full border border-current px-6 py-3 font-medium transition-transform duration-150 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
-              >
-                Run Demo Debrief
-              </button>
-            </div>
-          }
-        />
+        <div className="animate-fade-up stagger-2 w-full max-w-2xl">
+          <VoiceConversationPanel
+            mode="debrief"
+            onConsultationEnd={classify}
+            classifying={classifying}
+            demoSlot={
+              <div className="flex flex-col items-center gap-4">
+                <span
+                  className="rounded-full px-3 py-1 text-xs font-medium"
+                  style={{
+                    background: "var(--surface-2)",
+                    color: "var(--text-subtle)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  Demo mode
+                </span>
+                <button
+                  onClick={runDemo}
+                  disabled={classifying}
+                  className="rounded-full px-6 py-3 font-semibold transition-all duration-[var(--duration-normal)] hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-50 min-h-[44px]"
+                  style={{
+                    background: "var(--accent)",
+                    color: "var(--accent-contrast)",
+                  }}
+                >
+                  Run Demo Debrief
+                </button>
+              </div>
+            }
+          />
+        </div>
       )}
 
       {classifyError && (
-        <div role="alert" className="flex max-w-md flex-col items-center gap-3 rounded-2xl bg-red-50 p-4 text-center ring-1 ring-red-200 dark:bg-red-950/30 dark:ring-red-900">
-          <p className="text-sm text-red-900 dark:text-red-200">{classifyError}</p>
+        <div
+          role="alert"
+          className="flex max-w-md flex-col items-center gap-3 rounded-[var(--radius-xl)] p-5 text-center"
+          style={{
+            background: "var(--care-er-bg)",
+            border: "1px solid var(--care-er-border)",
+          }}
+        >
+          <p className="text-sm" style={{ color: "var(--care-er-text)" }}>
+            {classifyError}
+          </p>
           <button
             onClick={() => setClassifyError(null)}
-            className="rounded-full border border-red-400 px-5 py-2 text-xs font-medium text-red-700 transition-transform duration-150 hover:scale-105 active:scale-95 dark:border-red-700 dark:text-red-300"
+            className="rounded-full px-5 py-2 text-xs font-semibold transition-all hover:scale-105 active:scale-95 min-h-[44px]"
+            style={{
+              border: "1px solid var(--care-er-border)",
+              color: "var(--care-er-text)",
+            }}
           >
             Dismiss
           </button>

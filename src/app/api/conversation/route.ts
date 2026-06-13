@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
   const medContext = rawMedContext.slice(0, MAX_MED_CONTEXT);
 
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 25_000, maxRetries: 1 });
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       response_format: { type: "json_object" },

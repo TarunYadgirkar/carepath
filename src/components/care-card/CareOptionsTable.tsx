@@ -1,4 +1,5 @@
 import type { CareLevel, CareOption } from "@/types/carepath";
+import { CARE_LEVEL_ICONS, CARE_LEVEL_LABELS } from "./care-level-styles";
 
 type Props = {
   options: CareOption[];
@@ -7,79 +8,153 @@ type Props = {
   deductibleRemaining?: number;
 };
 
-const FIT_STYLES: Record<CareOption["medicalFit"], string> = {
-  low: "bg-zinc-100 text-zinc-500",
-  medium: "bg-amber-100 text-amber-900",
-  high: "bg-emerald-100 text-emerald-900",
+const FIT_STYLES: Record<CareOption["medicalFit"], { bg: string; text: string; border: string; label: string }> = {
+  low:    { bg: "var(--surface-2)",     text: "var(--text-muted)",    border: "var(--border)",        label: "Low fit"    },
+  medium: { bg: "var(--care-urgent-bg)", text: "var(--care-urgent-text)", border: "var(--care-urgent-border)", label: "Medium fit" },
+  high:   { bg: "var(--care-self-bg)",  text: "var(--care-self-text)", border: "var(--care-self-border)", label: "High fit" },
 };
 
 export function CareOptionsTable({ options, recommendedCareLevel, insurancePlan, deductibleRemaining }: Props) {
   if (options.length === 0) return null;
 
   return (
-    <section className="rounded-2xl bg-white p-6 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
-        Care options &amp; estimated cost
-      </h2>
-      <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[480px] text-left text-sm">
+    <section
+      aria-labelledby="care-options-heading"
+      className="rounded-[var(--radius-xl)] ring-1"
+      style={{ background: "var(--surface)", borderColor: "var(--border)", boxShadow: "var(--shadow-sm)" }}
+    >
+      <div className="p-5 pb-4">
+        <h2
+          id="care-options-heading"
+          className="text-xs font-semibold uppercase tracking-[0.12em]"
+          style={{ color: "var(--text-subtle)" }}
+        >
+          Care options &amp; estimated cost
+        </h2>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table
+          className="w-full min-w-[520px] text-left text-sm"
+          aria-label="Care options comparison"
+        >
           <thead>
-            <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-500 dark:border-zinc-800">
-              <th className="py-2 pr-4">Option</th>
-              <th className="py-2 pr-4">Fit</th>
-              <th className="py-2 pr-4">Wait</th>
-              <th className="py-2 pr-4">Est. cost</th>
-              <th className="py-2">Why</th>
+            <tr
+              className="text-[11px] font-semibold uppercase tracking-[0.1em]"
+              style={{
+                color: "var(--text-subtle)",
+                borderBottom: "1px solid var(--border)",
+              }}
+            >
+              <th className="px-5 py-2.5 font-semibold">Option</th>
+              <th className="px-3 py-2.5 font-semibold">Medical fit</th>
+              <th className="px-3 py-2.5 font-semibold">Wait</th>
+              <th className="px-3 py-2.5 font-semibold">Est. cost</th>
+              <th className="px-5 py-2.5 font-semibold">Notes</th>
             </tr>
           </thead>
           <tbody>
             {options.map((option) => {
               const isRecommended = option.type === recommendedCareLevel;
+              const fit = FIT_STYLES[option.medicalFit];
               return (
                 <tr
                   key={option.type}
-                  className={`border-b border-zinc-100 align-top last:border-0 dark:border-zinc-900 ${
-                    isRecommended ? "bg-zinc-50 dark:bg-zinc-900/50" : ""
-                  }`}
+                  className="align-top"
+                  style={{
+                    background: isRecommended ? "var(--surface-2)" : "transparent",
+                    borderBottom: "1px solid var(--border)",
+                  }}
+                  aria-current={isRecommended ? "true" : undefined}
+                  aria-label={isRecommended ? `${CARE_LEVEL_LABELS[option.type]} — recommended` : undefined}
                 >
-                  <td className="py-3 pr-4 font-medium">
-                    {option.label}
-                    {isRecommended && (
-                      <span className="ml-2 rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-medium text-zinc-50 dark:bg-zinc-100 dark:text-zinc-900">
-                        Recommended
-                      </span>
-                    )}
+                  <td className="px-5 py-4">
+                    <div className="flex items-start gap-2.5">
+                      {/* Level icon — static SVG from Foundation constants, not user input */}
+                      <span
+                        aria-hidden="true"
+                        className="mt-[2px] shrink-0"
+                        style={{ color: "var(--text-muted)", fontSize: 0 }}
+                        dangerouslySetInnerHTML={{ __html: CARE_LEVEL_ICONS[option.type] }}
+                      />
+                      <div>
+                        <span
+                          className="font-semibold"
+                          style={{ color: "var(--text-primary)" }}
+                        >
+                          {CARE_LEVEL_LABELS[option.type]}
+                        </span>
+                        {isRecommended && (
+                          <span
+                            className="ml-2 inline-flex items-center rounded-full px-2 py-[2px] text-[10px] font-bold uppercase tracking-wide"
+                            style={{
+                              background: "var(--accent)",
+                              color: "var(--accent-contrast)",
+                            }}
+                          >
+                            Recommended
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </td>
-                  <td className="py-3 pr-4">
+                  <td className="px-3 py-4">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${FIT_STYLES[option.medicalFit]}`}
+                      className="inline-flex items-center rounded-full px-2.5 py-[3px] text-xs font-medium ring-1"
+                      style={{
+                        background: fit.bg,
+                        color: fit.text,
+                        borderColor: fit.border,
+                      }}
+                      aria-label={`Medical fit: ${fit.label}`}
                     >
-                      {option.medicalFit}
+                      {fit.label}
                     </span>
                   </td>
-                  <td className="py-3 pr-4 whitespace-nowrap">{option.waitTime}</td>
-                  <td className="py-3 pr-4 whitespace-nowrap font-medium">
+                  <td
+                    className="px-3 py-4 whitespace-nowrap text-sm"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    {option.waitTime}
+                  </td>
+                  <td
+                    className="px-3 py-4 whitespace-nowrap text-sm font-semibold"
+                    style={{ color: "var(--text-primary)" }}
+                  >
                     {option.estimatedCost}
                   </td>
-                  <td className="py-3 text-zinc-600 dark:text-zinc-400">{option.explanation}</td>
+                  <td
+                    className="px-5 py-4 text-sm leading-relaxed"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    {option.explanation}
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
-      <p className="mt-3 text-xs text-zinc-500">
+
+      <p
+        className="px-5 py-4 text-xs leading-relaxed"
+        style={{ color: "var(--text-subtle)", borderTop: "1px solid var(--border)" }}
+      >
         {insurancePlan && (
           <>
-            Based on your <span className="font-medium">{insurancePlan}</span> plan
+            Based on your{" "}
+            <span className="font-semibold" style={{ color: "var(--text-muted)" }}>
+              {insurancePlan}
+            </span>{" "}
+            plan
             {typeof deductibleRemaining === "number" && (
               <> (~${deductibleRemaining.toLocaleString()} left on your deductible)</>
             )}
             .{" "}
           </>
         )}
-        These are estimates, not bills — your actual cost depends on the visit, provider, and
-        how much of your deductible you&apos;ve met.
+        These are estimates, not bills — actual cost depends on the visit, provider, and how much of
+        your deductible you&apos;ve met.
       </p>
     </section>
   );

@@ -33,14 +33,29 @@ export async function POST(req: NextRequest) {
     ? requestedLanguage
     : CAREPATH_VOICE_SETTINGS.ttsLanguage;
 
-  const response = await fetch("https://api.x.ai/v1/tts", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.XAI_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ text, voice_id: voiceId, language }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
+  let response: Response;
+  try {
+    response = await fetch("https://api.x.ai/v1/tts", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text, voice_id: voiceId, language }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    console.error("TTS fetch error:", err instanceof Error ? err.message : "unknown");
+    return NextResponse.json(
+      { error: "Voice service temporarily unavailable" },
+      { status: 502 }
+    );
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     const detail = await response.text();

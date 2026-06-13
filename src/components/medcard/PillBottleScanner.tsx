@@ -18,18 +18,35 @@ type ConfirmFields = {
   frequency: string;
 };
 
-const CONFIDENCE_STYLES: Record<ScanResult["confidence"], string> = {
-  low: "bg-red-50 text-red-700 ring-1 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900",
-  medium:
-    "bg-amber-50 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900",
-  high: "bg-teal-50 text-teal-800 ring-1 ring-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:ring-teal-900",
+const CONFIDENCE_META: Record<
+  ScanResult["confidence"],
+  { bg: string; text: string; border: string; icon: string; label: string }
+> = {
+  low: {
+    bg: "var(--care-er-bg)",
+    text: "var(--care-er-text)",
+    border: "var(--care-er-border)",
+    icon: "⚠",
+    label: "Low confidence — please review carefully",
+  },
+  medium: {
+    bg: "var(--care-urgent-bg)",
+    text: "var(--care-urgent-text)",
+    border: "var(--care-urgent-border)",
+    icon: "▲",
+    label: "Medium confidence — verify before saving",
+  },
+  high: {
+    bg: "var(--care-tele-bg)",
+    text: "var(--care-tele-text)",
+    border: "var(--care-tele-border)",
+    icon: "✓",
+    label: "High confidence",
+  },
 };
 
-const CONFIDENCE_LABELS: Record<ScanResult["confidence"], string> = {
-  low: "Low confidence — please review carefully",
-  medium: "Medium confidence — verify before saving",
-  high: "High confidence",
-};
+const INPUT_CLASS =
+  "w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-all duration-[var(--duration-fast)]";
 
 export function PillBottleScanner() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -66,8 +83,13 @@ export function PillBottleScanner() {
             body: JSON.stringify({ image: dataUrl }),
           });
 
-          const data: { medicationName?: string; dosage?: string; frequency?: string; confidence?: string; error?: string } =
-            await res.json();
+          const data: {
+            medicationName?: string;
+            dosage?: string;
+            frequency?: string;
+            confidence?: string;
+            error?: string;
+          } = await res.json();
 
           if (!res.ok || data.error) {
             throw new Error(data.error ?? `Server error ${res.status}`);
@@ -140,41 +162,75 @@ export function PillBottleScanner() {
   }, []);
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl bg-white p-6 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
+    <section
+      style={{
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: "var(--radius-xl)",
+        boxShadow: "var(--shadow-sm)",
+      }}
+      className="flex flex-col gap-5 p-6"
+    >
       <header>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        <h2
+          className="text-xs font-semibold uppercase tracking-[0.15em]"
+          style={{ color: "var(--text-subtle)" }}
+        >
           Scan Pill Bottle
         </h2>
-        <p className="mt-1 text-sm text-zinc-500">
-          Point your camera at a pill bottle label — CarePath will extract the medication name,
-          dosage, and instructions.
+        <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
+          Point your camera at a pill bottle label — CarePath extracts the medication name,
+          dosage, and instructions for you.
         </p>
       </header>
 
+      {/* ── IDLE ─────────────────────────────────────────────────────────────── */}
       {scanState === "idle" && (
         <div className="flex flex-col items-center gap-3">
           <label
             htmlFor="pill-bottle-input"
-            className="group flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-zinc-300 px-8 py-8 transition-colors duration-150 hover:border-[var(--accent)] hover:bg-teal-50/40 dark:border-zinc-700 dark:hover:border-[var(--accent)] dark:hover:bg-teal-950/20"
+            className="group flex w-full cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed px-8 py-10 transition-all duration-[var(--duration-normal)]"
+            style={{
+              borderColor: "var(--border-strong)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLLabelElement).style.borderColor = "var(--accent)";
+              (e.currentTarget as HTMLLabelElement).style.background = "var(--accent-soft)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLLabelElement).style.borderColor = "var(--border-strong)";
+              (e.currentTarget as HTMLLabelElement).style.background = "transparent";
+            }}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              className="h-8 w-8 text-zinc-400 transition-colors duration-150 group-hover:text-[var(--accent)]"
+            {/* Camera icon */}
+            <span
+              className="flex h-12 w-12 items-center justify-center rounded-full transition-colors duration-[var(--duration-normal)]"
+              style={{ background: "var(--surface-2)" }}
             >
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-              <circle cx="12" cy="13" r="4" />
-            </svg>
-            <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-              Take photo or choose image
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className="h-6 w-6 transition-colors duration-[var(--duration-normal)]"
+                style={{ color: "var(--accent)" }}
+              >
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
             </span>
-            <span className="text-xs text-zinc-400">Camera opens on mobile</span>
+            <div className="text-center">
+              <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                Take photo or choose image
+              </p>
+              <p className="mt-0.5 text-xs" style={{ color: "var(--text-subtle)" }}>
+                Camera opens on mobile · JPEG, PNG, HEIC supported
+              </p>
+            </div>
           </label>
           <input
             ref={inputRef}
@@ -188,29 +244,39 @@ export function PillBottleScanner() {
         </div>
       )}
 
+      {/* ── LOADING ───────────────────────────────────────────────────────────── */}
       {scanState === "loading" && (
-        <div className="flex flex-col items-center gap-4 py-6">
+        <div className="flex flex-col items-center gap-5 py-6">
           {preview && (
             // next/image can't optimize a client-side base64 data URL
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={preview}
               alt="Pill bottle being scanned"
-              className="h-32 w-32 rounded-xl object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
+              className="h-32 w-32 rounded-xl object-cover"
+              style={{ border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}
             />
           )}
-          <div className="flex items-center gap-2 text-sm text-zinc-500">
+          <div className="flex flex-col items-center gap-2">
             <span
               aria-hidden="true"
-              className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-[var(--accent)]"
+              className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
+              style={{ borderColor: "var(--border-strong)", borderTopColor: "var(--accent)" }}
             />
-            Reading label…
+            <p className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>
+              Reading label…
+            </p>
+            <p className="text-xs" style={{ color: "var(--text-subtle)" }}>
+              This usually takes a few seconds
+            </p>
           </div>
         </div>
       )}
 
+      {/* ── RESULT ───────────────────────────────────────────────────────────── */}
       {scanState === "result" && scanResult && (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 animate-fade-up">
+          {/* Preview + confidence */}
           <div className="flex items-start gap-4">
             {preview && (
               // next/image can't optimize a client-side base64 data URL
@@ -218,73 +284,95 @@ export function PillBottleScanner() {
               <img
                 src={preview}
                 alt="Scanned pill bottle"
-                className="h-20 w-20 shrink-0 rounded-xl object-cover ring-1 ring-zinc-200 dark:ring-zinc-700"
+                className="h-20 w-20 shrink-0 rounded-xl object-cover"
+                style={{ border: "1px solid var(--border)", boxShadow: "var(--shadow-xs)" }}
               />
             )}
-            <div className="flex flex-col gap-1.5">
-              <span
-                className={`self-start rounded-full px-3 py-1 text-xs font-medium ${CONFIDENCE_STYLES[scanResult.confidence]}`}
-              >
-                {CONFIDENCE_LABELS[scanResult.confidence]}
-              </span>
-              <p className="text-xs text-zinc-500">
-                Correct any errors before saving — vision models aren&apos;t perfect on small print.
+            <div className="flex flex-col gap-2">
+              {(() => {
+                const meta = CONFIDENCE_META[scanResult.confidence];
+                return (
+                  <span
+                    className="inline-flex items-center gap-1.5 self-start rounded-full px-3 py-1 text-xs font-semibold"
+                    style={{
+                      background: meta.bg,
+                      color: meta.text,
+                      border: `1px solid ${meta.border}`,
+                    }}
+                    aria-label={meta.label}
+                  >
+                    <span aria-hidden="true">{meta.icon}</span>
+                    {meta.label}
+                  </span>
+                );
+              })()}
+              <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                Review and correct any errors before saving — vision models aren&apos;t perfect on
+                small print.
               </p>
             </div>
           </div>
 
+          {/* Editable confirm form */}
           <fieldset className="flex flex-col gap-3">
-            <legend className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <legend className="text-xs font-semibold uppercase tracking-[0.15em]" style={{ color: "var(--text-subtle)" }}>
               Confirm extracted details
             </legend>
 
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                Medication name
-              </span>
-              <input
-                type="text"
-                value={confirm.medicationName}
-                onChange={handleConfirmChange("medicationName")}
-                placeholder="e.g. Lisinopril"
-                className="rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 dark:border-zinc-700"
-              />
-            </label>
-
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Dosage</span>
-              <input
-                type="text"
-                value={confirm.dosage}
-                onChange={handleConfirmChange("dosage")}
-                placeholder="e.g. 10mg"
-                className="rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 dark:border-zinc-700"
-              />
-            </label>
-
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                Frequency / instructions
-              </span>
-              <input
-                type="text"
-                value={confirm.frequency}
-                onChange={handleConfirmChange("frequency")}
-                placeholder="e.g. once daily"
-                className="rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 dark:border-zinc-700"
-              />
-            </label>
+            {(
+              [
+                { field: "medicationName" as const, label: "Medication name", placeholder: "e.g. Lisinopril" },
+                { field: "dosage" as const, label: "Dosage", placeholder: "e.g. 10mg" },
+                { field: "frequency" as const, label: "Frequency / instructions", placeholder: "e.g. once daily" },
+              ] as const
+            ).map(({ field, label, placeholder }) => (
+              <label key={field} className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+                  {label}
+                </span>
+                <input
+                  type="text"
+                  value={confirm[field]}
+                  onChange={handleConfirmChange(field)}
+                  placeholder={placeholder}
+                  className={INPUT_CLASS}
+                  style={{
+                    background: "var(--surface-2)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text-primary)",
+                    borderRadius: "var(--radius-md)",
+                  }}
+                  onFocus={(e) => {
+                    (e.currentTarget as HTMLInputElement).style.borderColor = "var(--accent)";
+                    (e.currentTarget as HTMLInputElement).style.outline = "2px solid var(--accent)";
+                    (e.currentTarget as HTMLInputElement).style.outlineOffset = "2px";
+                  }}
+                  onBlur={(e) => {
+                    (e.currentTarget as HTMLInputElement).style.borderColor = "var(--border)";
+                    (e.currentTarget as HTMLInputElement).style.outline = "none";
+                  }}
+                />
+              </label>
+            ))}
           </fieldset>
 
           {saved ? (
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2 rounded-xl bg-teal-50 px-4 py-3 text-sm font-medium text-teal-800 ring-1 ring-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:ring-teal-900">
+              <div
+                className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-medium"
+                style={{
+                  background: "var(--care-tele-bg)",
+                  color: "var(--care-tele-text)",
+                  border: "1px solid var(--care-tele-border)",
+                }}
+                role="status"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   aria-hidden="true"
@@ -297,7 +385,12 @@ export function PillBottleScanner() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="rounded-full border border-current px-5 py-2.5 text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95"
+                style={{
+                  border: "1px solid var(--border-strong)",
+                  color: "var(--text-primary)",
+                  borderRadius: "var(--radius-2xl)",
+                }}
+                className="self-start px-5 py-2.5 text-sm font-medium transition-all duration-[var(--duration-fast)] hover:scale-[1.02] active:scale-[0.98]"
               >
                 Scan another bottle
               </button>
@@ -308,14 +401,25 @@ export function PillBottleScanner() {
                 type="button"
                 onClick={handleAddToMedCard}
                 disabled={!confirm.medicationName.trim()}
-                className="rounded-full bg-[var(--accent)] px-6 py-2.5 text-sm font-semibold text-white transition-transform duration-150 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                style={{
+                  background: "var(--accent)",
+                  color: "var(--accent-contrast)",
+                  borderRadius: "var(--radius-2xl)",
+                  boxShadow: "var(--shadow-sm)",
+                }}
+                className="px-6 py-2.5 text-sm font-semibold transition-all duration-[var(--duration-fast)] hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
               >
                 Add to MedCard
               </button>
               <button
                 type="button"
                 onClick={handleReset}
-                className="rounded-full border border-current px-5 py-2.5 text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95"
+                style={{
+                  border: "1px solid var(--border-strong)",
+                  color: "var(--text-muted)",
+                  borderRadius: "var(--radius-2xl)",
+                }}
+                className="px-5 py-2.5 text-sm font-medium transition-all duration-[var(--duration-fast)] hover:scale-[1.02] active:scale-[0.98]"
               >
                 Cancel
               </button>
@@ -324,28 +428,57 @@ export function PillBottleScanner() {
         </div>
       )}
 
+      {/* ── ERROR ─────────────────────────────────────────────────────────────── */}
       {scanState === "error" && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 animate-fade-up">
           <div
             role="alert"
-            className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900"
+            className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm"
+            style={{
+              background: "var(--care-er-bg)",
+              color: "var(--care-er-text)",
+              border: "1px solid var(--care-er-border)",
+            }}
           >
-            {errorMsg ?? "Scan failed — please try again."}
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+              className="mt-0.5 shrink-0"
+            >
+              <path
+                d="M8 1.5L14.5 13H1.5L8 1.5Z"
+                stroke="currentColor"
+                strokeWidth="1.25"
+                strokeLinejoin="round"
+              />
+              <path d="M8 6v3.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+              <circle cx="8" cy="11.5" r="0.75" fill="currentColor" />
+            </svg>
+            <span>{errorMsg ?? "Scan failed — please try again."}</span>
           </div>
           <button
             type="button"
             onClick={handleReset}
-            className="self-start rounded-full border border-current px-5 py-2.5 text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95"
+            style={{
+              border: "1px solid var(--border-strong)",
+              color: "var(--text-primary)",
+              borderRadius: "var(--radius-2xl)",
+            }}
+            className="self-start px-5 py-2.5 text-sm font-medium transition-all duration-[var(--duration-fast)] hover:scale-[1.02] active:scale-[0.98]"
           >
             Try again
           </button>
         </div>
       )}
 
-      <p className="text-xs text-zinc-400">
-        <strong className="font-medium text-zinc-500">Privacy:</strong> Your photo is sent to
-        OpenAI for one-time label extraction and is not stored — not on CarePath servers, not in
-        your browser. Only the extracted text is saved to your local MedCard.
+      {/* Privacy note — always visible */}
+      <p className="text-xs leading-relaxed" style={{ color: "var(--text-subtle)" }}>
+        <strong className="font-medium" style={{ color: "var(--text-muted)" }}>Privacy:</strong>{" "}
+        Your photo is sent to OpenAI for one-time label extraction and is not stored — not on
+        CarePath servers, not in your browser. Only the extracted text is saved locally.
       </p>
     </section>
   );

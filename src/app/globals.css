@@ -1,54 +1,208 @@
 @import "tailwindcss";
 
-:root {
-  --background: #fafafa;
-  --foreground: #18181b;
-  --accent: #0d9488;
-  --accent-soft: #ccfbf1;
-}
+/* ─── Design Tokens ─────────────────────────────────────────────────────── */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  /* Backgrounds — warm paper in light */
+  --background:        #f9f7f4;
+  --surface:           #ffffff;
+  --surface-2:         #f2efe9;
+
+  /* Text */
+  --text-primary:      #18130f;
+  --text-muted:        #6b6460;
+  --text-subtle:       #a09790;
+
+  /* Border / hairline */
+  --border:            #e4dfd8;
+  --border-strong:     #cdc7bf;
+
+  /* Teal accent — trust / medical / calm */
+  --accent:            #0d8f85;
+  --accent-hover:      #0a756c;
+  --accent-soft:       #d4f0ed;
+  --accent-contrast:   #ffffff;
+
+  /* CARE-LEVEL semantic ramp */
+  /* self_monitor = green */
+  --care-self-bg:      #dcfce7;
+  --care-self-text:    #14532d;
+  --care-self-border:  #86efac;
+  --care-self-ring:    #22c55e;
+  /* telehealth = teal */
+  --care-tele-bg:      #ccfbf1;
+  --care-tele-text:    #134e4a;
+  --care-tele-border:  #5eead4;
+  --care-tele-ring:    #14b8a6;
+  /* primary_care = blue */
+  --care-primary-bg:   #dbeafe;
+  --care-primary-text: #1e3a5f;
+  --care-primary-border:#93c5fd;
+  --care-primary-ring: #3b82f6;
+  /* urgent_care = amber */
+  --care-urgent-bg:    #fef3c7;
+  --care-urgent-text:  #78350f;
+  --care-urgent-border:#fcd34d;
+  --care-urgent-ring:  #f59e0b;
+  /* emergency_room = red */
+  --care-er-bg:        #fee2e2;
+  --care-er-text:      #7f1d1d;
+  --care-er-border:    #fca5a5;
+  --care-er-ring:      #ef4444;
+
+  /* Shadows */
+  --shadow-xs:  0 1px 2px 0 rgb(24 19 15 / 0.06);
+  --shadow-sm:  0 2px 6px -1px rgb(24 19 15 / 0.08), 0 1px 2px -1px rgb(24 19 15 / 0.04);
+  --shadow-md:  0 4px 16px -2px rgb(24 19 15 / 0.10), 0 2px 4px -2px rgb(24 19 15 / 0.04);
+
+  /* Radius scale */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 24px;
+
+  /* Easing */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 240ms;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #09090b;
-    --foreground: #fafafa;
-    --accent: #2dd4bf;
-    --accent-soft: #134e4a;
+    /* Backgrounds — deep cool near-black in dark */
+    --background:        #0e1117;
+    --surface:           #161b24;
+    --surface-2:         #1d2433;
+
+    /* Text */
+    --text-primary:      #f0ede8;
+    --text-muted:        #9ba3af;
+    --text-subtle:       #6b7280;
+
+    /* Border / hairline */
+    --border:            #252d3a;
+    --border-strong:     #374151;
+
+    /* Teal accent — lighter/brighter for dark bg contrast */
+    --accent:            #2dd4bf;
+    --accent-hover:      #5eead4;
+    --accent-soft:       #134e4a;
+    --accent-contrast:   #0d1a18;
+
+    /* CARE-LEVEL semantic ramp — dark-mode AA contrast */
+    /* self_monitor = green */
+    --care-self-bg:      #14532d;
+    --care-self-text:    #bbf7d0;
+    --care-self-border:  #166534;
+    --care-self-ring:    #4ade80;
+    /* telehealth = teal */
+    --care-tele-bg:      #134e4a;
+    --care-tele-text:    #99f6e4;
+    --care-tele-border:  #0f5e57;
+    --care-tele-ring:    #2dd4bf;
+    /* primary_care = blue */
+    --care-primary-bg:   #1e3a5f;
+    --care-primary-text: #bfdbfe;
+    --care-primary-border:#1d4ed8;
+    --care-primary-ring: #60a5fa;
+    /* urgent_care = amber */
+    --care-urgent-bg:    #78350f;
+    --care-urgent-text:  #fde68a;
+    --care-urgent-border:#92400e;
+    --care-urgent-ring:  #fbbf24;
+    /* emergency_room = red */
+    --care-er-bg:        #7f1d1d;
+    --care-er-text:      #fecaca;
+    --care-er-border:    #991b1b;
+    --care-er-ring:      #f87171;
+
+    /* Shadows (subtle in dark — use borders more) */
+    --shadow-xs:  0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-sm:  0 2px 6px -1px rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+    --shadow-md:  0 4px 16px -2px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.2);
   }
 }
+
+/* ─── Tailwind Theme Registration ──────────────────────────────────────── */
+
+@theme inline {
+  --color-background:  var(--background);
+  --color-foreground:  var(--text-primary);
+  --font-sans:         var(--font-geist-sans);
+  --font-mono:         var(--font-geist-mono);
+  --font-display:      var(--font-fraunces);
+}
+
+/* ─── Base Styles ───────────────────────────────────────────────────────── */
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Display serif utility */
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+/* Focus ring — visible on every interactive element */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Keyframes ─────────────────────────────────────────────────────────── */
+
 @keyframes connect-progress {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
 }
 
 @keyframes orb-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.5;
+  0%, 100% { transform: scale(1);   opacity: 0.5; }
+  50%       { transform: scale(1.2); opacity: 1;   }
+}
+
+/* Staggered fade + rise reveal */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
-  50% {
-    transform: scale(1.2);
+  to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s var(--ease-out-expo) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s var(--ease-out-expo) both;
+}
+
+/* Stagger helpers */
+.stagger-1 { animation-delay: 60ms;  }
+.stagger-2 { animation-delay: 120ms; }
+.stagger-3 { animation-delay: 180ms; }
+.stagger-4 { animation-delay: 240ms; }
+.stagger-5 { animation-delay: 300ms; }
+
+/* ─── Reduced Motion ────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
   * {

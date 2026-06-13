@@ -90,98 +90,191 @@ export function VoiceConversationPanel({
     <>
       <EmergencyBanner show={showEmergencyBanner} />
 
-      <section className="flex w-full max-w-xl flex-col items-center gap-4 rounded-2xl bg-white p-6 ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
+      <section
+        className="flex w-full max-w-xl flex-col items-center gap-6 rounded-2xl p-6 ring-1"
+        style={{
+          background: "var(--surface)",
+          borderColor: "var(--border)",
+          boxShadow: "var(--shadow-md)",
+        }}
+      >
+        {/* Header badges */}
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-medium text-[var(--accent)]">
+          <span
+            className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
+            style={{
+              background: "var(--accent-soft)",
+              color: "var(--accent)",
+            }}
+          >
+            <svg aria-hidden="true" className="h-3 w-3" viewBox="0 0 12 12" fill="currentColor">
+              <circle cx="6" cy="6" r="3" />
+              <circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+            </svg>
             Live conversation
           </span>
-          <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
+          <span
+            className="rounded-full px-3 py-1 text-xs font-medium"
+            style={{
+              background: "var(--surface-2)",
+              color: "var(--text-muted)",
+              border: "1px solid var(--border)",
+            }}
+          >
             Voice: {CAREPATH_VOICE_SETTINGS.voiceLabel}
           </span>
         </div>
 
         <VoiceOrb status={status} />
 
-        {!conversationActive && insuranceSelector}
+        {!conversationActive && <div className="w-full">{insuranceSelector}</div>}
 
-        {conversationActive ? (
-          <button
-            onClick={stop}
-            className="rounded-full border border-current px-6 py-3 font-medium transition-transform duration-150 hover:scale-105 active:scale-95"
-          >
-            End Conversation
-          </button>
-        ) : (
-          <button
-            onClick={start}
-            disabled={(useFallbackVoice ? !voiceSupported : !grokSupported) || classifying}
-            className="rounded-full bg-[var(--accent)] px-6 py-3 font-medium text-white transition-transform duration-150 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
-          >
-            Start Live Conversation
-          </button>
-        )}
+        {/* CTA buttons */}
+        <div className="flex flex-col items-center gap-3">
+          {conversationActive ? (
+            <button
+              onClick={stop}
+              aria-label="End conversation"
+              className="min-h-[44px] min-w-[176px] rounded-full px-6 py-3 text-sm font-medium ring-1 transition-all duration-150 hover:opacity-80 active:scale-95"
+              style={{
+                background: "var(--surface-2)",
+                color: "var(--text-primary)",
+                borderColor: "var(--border-strong)",
+              }}
+            >
+              End Conversation
+            </button>
+          ) : (
+            <button
+              onClick={start}
+              disabled={(useFallbackVoice ? !voiceSupported : !grokSupported) || classifying}
+              aria-label="Start live voice conversation"
+              className="min-h-[44px] min-w-[200px] rounded-full px-7 py-3 text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-95 disabled:pointer-events-none disabled:opacity-40"
+              style={{
+                background: "var(--accent)",
+                color: "var(--accent-contrast)",
+                boxShadow: "var(--shadow-sm)",
+              }}
+            >
+              Start Live Conversation
+            </button>
+          )}
 
-        {(useFallbackVoice ? !voiceSupported : !grokSupported) && (
-          <p className="text-center text-sm text-zinc-500">
-            Live conversation needs a browser with microphone access (Chrome or Edge). Try the demo below instead.
+          {(useFallbackVoice ? !voiceSupported : !grokSupported) && (
+            <p
+              className="max-w-xs text-center text-xs leading-relaxed"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Live conversation needs a browser with microphone access (Chrome or Edge). Try the
+              demo below instead.
+            </p>
+          )}
+        </div>
+
+        {/* Error state */}
+        {error && (
+          <p
+            className="rounded-lg px-3 py-2 text-xs"
+            role="alert"
+            style={{
+              background: "var(--care-er-bg)",
+              color: "var(--care-er-text)",
+              border: "1px solid var(--care-er-border)",
+            }}
+          >
+            {error}
           </p>
         )}
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
-
+        {/* Fallback voice switch */}
         {!useFallbackVoice && (error || !grokSupported) && voiceSupported && !conversationActive && (
           <button
             onClick={() => setUseFallbackVoice(true)}
-            className="text-xs text-zinc-500 underline transition-colors hover:text-[var(--accent)]"
+            className="text-xs underline transition-colors"
+            style={{ color: "var(--text-subtle)" }}
           >
             Grok Voice unavailable — switch to browser voice instead
           </button>
         )}
 
+        {/* Live transcript */}
         {(conversationActive || messages.length > 0) && (
           <div
-            className="flex w-full flex-col gap-3 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900"
+            className="flex w-full flex-col gap-3 rounded-xl p-4"
             aria-live="polite"
             aria-label="Live transcript"
+            style={{
+              background: "var(--surface-2)",
+              border: "1px solid var(--border)",
+            }}
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Live transcript</p>
+            <p
+              className="text-[10px] font-semibold uppercase tracking-widest"
+              style={{ color: "var(--text-subtle)" }}
+            >
+              Live transcript
+            </p>
 
             {liveHint && (
-              <p className="min-h-[1.25rem] text-sm italic text-[var(--accent)]" role="status">
+              <p
+                className="min-h-[1.25rem] text-sm italic"
+                role="status"
+                style={{ color: "var(--accent)" }}
+              >
                 {liveHint}
               </p>
             )}
 
             {messages.length > 0 ? (
-              <div className="flex max-h-64 flex-col gap-2 overflow-y-auto text-sm">
+              <div className="flex max-h-64 flex-col gap-2.5 overflow-y-auto">
                 {messages.map((message, i) => (
                   <div
                     key={i}
-                    className={`rounded-lg p-3 ${
-                      message.role === "user"
-                        ? "self-end bg-[var(--accent-soft)] text-right"
-                        : "self-start bg-white dark:bg-zinc-950"
+                    className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm ${
+                      message.role === "user" ? "self-end text-right" : "self-start"
                     }`}
+                    style={
+                      message.role === "user"
+                        ? {
+                            background: "var(--accent-soft)",
+                            color: "var(--accent)",
+                            border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
+                          }
+                        : {
+                            background: "var(--surface)",
+                            color: "var(--text-primary)",
+                            border: "1px solid var(--border)",
+                            boxShadow: "var(--shadow-xs)",
+                          }
+                    }
                   >
-                    <p className="mb-1 text-xs font-medium text-zinc-500">
+                    <p
+                      className="mb-1 text-[10px] font-semibold uppercase tracking-wide"
+                      style={{ color: "var(--text-subtle)" }}
+                    >
                       {message.role === "user" ? "You" : "CarePath"}
                     </p>
-                    <p className="whitespace-pre-wrap">{message.content}</p>
+                    <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-zinc-500">Transcript will appear here as you talk.</p>
+              <p className="text-sm" style={{ color: "var(--text-subtle)" }}>
+                Transcript will appear here as you talk.
+              </p>
             )}
           </div>
         )}
       </section>
 
       {demoSlot && !conversationActive && (
-        <div className="flex w-full max-w-xl items-center gap-3 text-xs text-zinc-400">
-          <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+        <div
+          className="flex w-full max-w-xl items-center gap-3 text-xs"
+          style={{ color: "var(--text-subtle)" }}
+        >
+          <span className="h-px flex-1" style={{ background: "var(--border)" }} />
           or
-          <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+          <span className="h-px flex-1" style={{ background: "var(--border)" }} />
         </div>
       )}
 

@@ -42,26 +42,47 @@ export default function MedCardPage() {
   const runDemo = useCallback(() => classify(""), [classify]);
 
   return (
-    <main className="flex flex-1 flex-col items-center gap-6 px-6 py-12">
-      <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700 dark:bg-purple-950 dark:text-purple-300">
-        Ongoing · MedCard
-      </span>
-      <h1 className="text-2xl font-semibold">CarePath MedCard</h1>
-      <p className="max-w-md text-center text-sm text-zinc-500">
-        Speak your medications, dosages, allergies, and conditions. CarePath checks for interactions and builds a
-        shareable card.
-      </p>
+    <main className="flex flex-1 flex-col items-center gap-8 px-6 py-12">
+      {/* Page header */}
+      <header className="flex flex-col items-center gap-3 text-center animate-fade-up">
+        <span
+          style={{
+            background: "var(--accent-soft)",
+            color: "var(--accent)",
+            border: "1px solid var(--care-tele-border)",
+          }}
+          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
+            <circle cx="5" cy="5" r="5" />
+          </svg>
+          Ongoing · MedCard
+        </span>
+        <h1 className="font-display text-3xl font-semibold tracking-tight" style={{ color: "var(--text-primary)" }}>
+          CarePath MedCard
+        </h1>
+        <p className="max-w-sm text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
+          Speak your medications, dosages, allergies, and conditions. CarePath checks for interactions
+          and builds a shareable card.
+        </p>
+      </header>
 
-      <SafetyDisclaimer />
+      <div className="w-full max-w-2xl animate-fade-up stagger-1">
+        <SafetyDisclaimer />
+      </div>
 
       {result ? (
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 animate-fade-up stagger-2">
           <MedCardResultView result={result} />
           <div className="flex flex-wrap justify-center gap-3 py-2">
             <DownloadMedCardButton />
             <button
               onClick={() => setResult(null)}
-              className="rounded-full border border-current px-6 py-3 text-sm font-medium transition-transform duration-150 hover:scale-105 active:scale-95"
+              style={{
+                border: "1px solid var(--border-strong)",
+                color: "var(--text-primary)",
+              }}
+              className="rounded-full px-6 py-3 text-sm font-medium transition-all duration-[var(--duration-normal)] hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-2"
             >
               Start New MedCard
             </button>
@@ -69,34 +90,65 @@ export default function MedCardPage() {
         </div>
       ) : (
         <>
-          <ConnectHealthRecordsButton />
-          <VoiceConversationPanel
-            mode="medcard"
-            onConsultationEnd={classify}
-            classifying={classifying}
-            demoSlot={
-              <div className="flex flex-col items-center gap-4">
-                <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-500 dark:bg-zinc-900">
-                  Demo mode
-                </span>
-                <button
-                  onClick={runDemo}
-                  disabled={classifying}
-                  className="rounded-full border border-current px-6 py-3 font-medium transition-transform duration-150 hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
-                >
-                  Run Demo MedCard
-                </button>
-              </div>
-            }
-          />
+          <div className="w-full max-w-2xl flex flex-col gap-6 animate-fade-up stagger-2">
+            <div
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                boxShadow: "var(--shadow-xs)",
+                borderRadius: "var(--radius-xl)",
+              }}
+              className="p-5 flex flex-col items-start gap-3"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.15em]" style={{ color: "var(--text-subtle)" }}>
+                Import records
+              </p>
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                Connect your Epic MyChart to pre-fill your medications, allergies, and conditions.
+              </p>
+              <ConnectHealthRecordsButton />
+            </div>
 
-          <div className="w-full max-w-md">
-            <div className="mb-3 flex items-center gap-3">
-              <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" aria-hidden="true" />
-              <span className="text-xs font-medium uppercase tracking-widest text-zinc-400">
+            <VoiceConversationPanel
+              mode="medcard"
+              onConsultationEnd={classify}
+              classifying={classifying}
+              demoSlot={
+                <div className="flex flex-col items-center gap-4">
+                  <span
+                    style={{
+                      background: "var(--surface-2)",
+                      color: "var(--text-subtle)",
+                      border: "1px solid var(--border)",
+                    }}
+                    className="rounded-full px-3 py-1 text-xs font-medium"
+                  >
+                    Demo mode
+                  </span>
+                  <button
+                    onClick={runDemo}
+                    disabled={classifying}
+                    style={{
+                      border: "1px solid var(--border-strong)",
+                      color: "var(--text-primary)",
+                    }}
+                    className="rounded-full px-6 py-3 font-medium text-sm transition-all duration-[var(--duration-normal)] hover:scale-[1.02] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    Run Demo MedCard
+                  </button>
+                </div>
+              }
+            />
+          </div>
+
+          {/* Scan divider + PillBottleScanner */}
+          <div className="w-full max-w-2xl animate-fade-up stagger-3">
+            <div className="mb-4 flex items-center gap-4" aria-hidden="true">
+              <div className="h-px flex-1" style={{ background: "var(--border)" }} />
+              <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--text-subtle)" }}>
                 or scan a pill bottle
               </span>
-              <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" aria-hidden="true" />
+              <div className="h-px flex-1" style={{ background: "var(--border)" }} />
             </div>
             <PillBottleScanner />
           </div>
@@ -104,11 +156,26 @@ export default function MedCardPage() {
       )}
 
       {classifyError && (
-        <div role="alert" className="flex max-w-md flex-col items-center gap-3 rounded-2xl bg-red-50 p-4 text-center ring-1 ring-red-200 dark:bg-red-950/30 dark:ring-red-900">
-          <p className="text-sm text-red-900 dark:text-red-200">{classifyError}</p>
+        <div
+          role="alert"
+          style={{
+            background: "var(--care-er-bg)",
+            border: "1px solid var(--care-er-border)",
+            borderRadius: "var(--radius-lg)",
+          }}
+          className="flex w-full max-w-md flex-col items-center gap-3 p-4 text-center"
+        >
+          <p className="text-sm font-medium" style={{ color: "var(--care-er-text)" }}>
+            {classifyError}
+          </p>
           <button
             onClick={() => setClassifyError(null)}
-            className="rounded-full border border-red-400 px-5 py-2 text-xs font-medium text-red-700 transition-transform duration-150 hover:scale-105 active:scale-95 dark:border-red-700 dark:text-red-300"
+            style={{
+              border: "1px solid var(--care-er-border)",
+              color: "var(--care-er-text)",
+              borderRadius: "var(--radius-xl)",
+            }}
+            className="px-5 py-2 text-xs font-semibold transition-all duration-[var(--duration-fast)] hover:scale-[1.02] active:scale-[0.98]"
           >
             Dismiss
           </button>
