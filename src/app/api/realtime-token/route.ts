@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
+import { CAREPATH_VOICE_SETTINGS } from "@/data/voice-settings";
 
-// Per docs.x.ai/developers/model-capabilities/audio/voice-agent: flagship
-// Voice Agent API model is grok-voice-think-fast-1.0 (grok-voice-latest
-// is an alias that tracks it).
-const GROK_REALTIME_MODEL = "grok-voice-think-fast-1.0";
+const GROK_REALTIME_MODEL = CAREPATH_VOICE_SETTINGS.realtimeModel;
 
 export async function POST() {
   if (!process.env.XAI_API_KEY) {
@@ -21,7 +19,7 @@ export async function POST() {
     },
     body: JSON.stringify({
       model: GROK_REALTIME_MODEL,
-      voice: "Eve",
+      voice: CAREPATH_VOICE_SETTINGS.realtimeVoice,
     }),
   });
 

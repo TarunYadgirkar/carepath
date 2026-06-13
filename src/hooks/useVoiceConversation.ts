@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import type { OrbStatus } from "@/components/VoiceOrb";
+import { speakGrokTts, stopGrokTts } from "@/lib/grok-tts";
 
 export type ConversationStatus = OrbStatus;
 
@@ -55,7 +56,7 @@ function getSpeechRecognitionCtor(): SpeechRecognitionCtor | undefined {
 }
 
 export function isVoiceConversationSupported(): boolean {
-  return Boolean(getSpeechRecognitionCtor()) && typeof window !== "undefined" && "speechSynthesis" in window;
+  return Boolean(getSpeechRecognitionCtor());
 }
 
 interface UseVoiceConversationResult {
@@ -63,6 +64,7 @@ interface UseVoiceConversationResult {
   error: string | null;
   messages: ConversationMessage[];
   interimTranscript: string;
+  speakingText: string | null;
   start: () => void;
   stop: () => void;
 }
@@ -72,17 +74,21 @@ export function useVoiceConversation(onDone: (summary: string) => void): UseVoic
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [interimTranscript, setInterimTranscript] = useState("");
+  const [speakingText, setSpeakingText] = useState<string | null>(null);
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const messagesRef = useRef<ConversationMessage[]>([]);
   const activeRef = useRef(false);
   const turnHandledRef = useRef(false);
+  const listeningRef = useRef(false);
 
   const cleanup = useCallback(() => {
     activeRef.current = false;
+    listeningRef.current = false;
     recognitionRef.current?.stop();
     recognitionRef.current = null;
-    if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+    stopGrokTts();
+    setSpeakingText(null);
   }, []);
 
   const stop = useCallback(() => {
@@ -90,38 +96,67 @@ export function useVoiceConversation(onDone: (summary: string) => void): UseVoic
     setStatus("ended");
   }, [cleanup]);
 
-  const start = useCallback(() => {
-    const Ctor = getSpeechRecognitionCtor();
-    if (!Ctor || typeof window === "undefined" || !window.speechSynthesis) {
-      setError("Live conversation needs Chrome or Edge with microphone access.");
-      setStatus("error");
-      return;
-    }
-
-    setError(null);
-    setMessages([]);
+  const listenOnce = useCallback(() => {
+    const recognition = recognitionRef.current;
+    if (!activeRef.current || !recognition) return;
+    turnHandledRef.current = false;
+    listeningRef.current = true;
     setInterimTranscript("");
-    messagesRef.current = [];
-    activeRef.current = true;
-
-    const recognition = new Ctor();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
-    recognitionRef.current = recognition;
-
-    const listenOnce = () => {
-      if (!activeRef.current) return;
-      turnHandledRef.current = false;
-      setInterimTranscript("");
-      setStatus("listening");
+    setStatus("listening");
+    try {
       recognition.start();
-    };
+    } catch {
+      // recognition may already be running
+    }
+  }, []);
 
-    const handleUserTurn = async (transcript: string) => {
+  const speakAndContinue = useCallback(
+    async (reply: string, done: boolean, summary: string | null, currentMessages: ConversationMessage[]) => {
+      listeningRef.current = false;
+      setSpeakingText(reply);
+      setStatus("speaking");
+
+      await speakGrokTts(reply, () => {
+        if (!activeRef.current) return;
+        setSpeakingText(null);
+
+        if (done) {
+          const finalSummary =
+            summary ??
+            currentMessages.map((m) => `${m.role === "user" ? "Patient" : "CarePath"}: ${m.content}`).join("\n");
+          cleanup();
+          setStatus("ended");
+          onDone(finalSummary);
+        } else {
+          listenOnce();
+        }
+      });
+    },
+    [cleanup, listenOnce, onDone]
+  );
+
+  const handleAssistantReply = useCallback(
+    async (data: ConversationReply, currentMessages: ConversationMessage[]) => {
+      const withReply: ConversationMessage[] = [
+        ...currentMessages,
+        { role: "assistant", content: data.reply },
+      ];
+      messagesRef.current = withReply;
+      setMessages(withReply);
+      await speakAndContinue(data.reply, data.done, data.summary, withReply);
+    },
+    [speakAndContinue]
+  );
+
+  const handleUserTurn = useCallback(
+    async (transcript: string) => {
       turnHandledRef.current = true;
+      listeningRef.current = false;
       setInterimTranscript("");
-      const updated: ConversationMessage[] = [...messagesRef.current, { role: "user", content: transcript }];
+      const updated: ConversationMessage[] = [
+        ...messagesRef.current,
+        { role: "user", content: transcript },
+      ];
       messagesRef.current = updated;
       setMessages(updated);
       setStatus("thinking");
@@ -133,34 +168,38 @@ export function useVoiceConversation(onDone: (summary: string) => void): UseVoic
           body: JSON.stringify({ messages: updated }),
         });
         const data: ConversationReply = await res.json();
-
-        const withReply: ConversationMessage[] = [...updated, { role: "assistant", content: data.reply }];
-        messagesRef.current = withReply;
-        setMessages(withReply);
-
-        setStatus("speaking");
-        const utterance = new SpeechSynthesisUtterance(data.reply);
-        utterance.onend = () => {
-          if (!activeRef.current) return;
-          if (data.done) {
-            const summary =
-              data.summary ??
-              withReply.map((m) => `${m.role === "user" ? "Patient" : "CarePath"}: ${m.content}`).join("\n");
-            cleanup();
-            setStatus("ended");
-            onDone(summary);
-          } else {
-            listenOnce();
-          }
-        };
-        utterance.onerror = utterance.onend;
-        window.speechSynthesis.speak(utterance);
+        await handleAssistantReply(data, updated);
       } catch {
         setError("Conversation error — please try again.");
         setStatus("error");
         cleanup();
       }
-    };
+    },
+    [cleanup, handleAssistantReply]
+  );
+
+  const start = useCallback(() => {
+    const Ctor = getSpeechRecognitionCtor();
+    if (!Ctor || typeof window === "undefined") {
+      setError("Live conversation needs Chrome or Edge with microphone access.");
+      setStatus("error");
+      return;
+    }
+
+    setError(null);
+    setMessages([]);
+    setInterimTranscript("");
+    setSpeakingText(null);
+    messagesRef.current = [];
+    activeRef.current = true;
+    turnHandledRef.current = false;
+    listeningRef.current = false;
+
+    const recognition = new Ctor();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognitionRef.current = recognition;
 
     recognition.onresult = (event) => {
       let finalTranscript = "";
@@ -189,17 +228,38 @@ export function useVoiceConversation(onDone: (summary: string) => void): UseVoic
         setStatus("error");
         cleanup();
       }
-      // Non-fatal errors (no-speech, aborted, network) fall through to
-      // onend, which restarts listening if no turn was handled.
     };
 
     recognition.onend = () => {
-      if (activeRef.current && !turnHandledRef.current) listenOnce();
+      if (activeRef.current && listeningRef.current && !turnHandledRef.current) {
+        listenOnce();
+      }
     };
 
-    setStatus("connecting");
-    listenOnce();
-  }, [cleanup, onDone]);
+    const beginWithGreeting = async () => {
+      setStatus("connecting");
+      try {
+        const res = await fetch("/api/conversation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: [] }),
+        });
+        const greeting: ConversationReply = await res.json();
+        const greetingMessages: ConversationMessage[] = [
+          { role: "assistant", content: greeting.reply },
+        ];
+        messagesRef.current = greetingMessages;
+        setMessages(greetingMessages);
+        await speakAndContinue(greeting.reply, false, null, greetingMessages);
+      } catch {
+        setError("Could not start conversation — please try again.");
+        setStatus("error");
+        cleanup();
+      }
+    };
 
-  return { status, error, messages, interimTranscript, start, stop };
+    void beginWithGreeting();
+  }, [cleanup, handleUserTurn, listenOnce, speakAndContinue]);
+
+  return { status, error, messages, interimTranscript, speakingText, start, stop };
 }

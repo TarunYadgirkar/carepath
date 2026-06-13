@@ -14,9 +14,9 @@
 
 | Field | Value |
 |---|---|
-| **Current Phase** | Phase 5 — Done |
+| **Current Phase** | Phase 6 — Done (Grok TTS wired) |
 | **Last Updated** | 2026-06-13 |
-| **Last Tool Used** | Claude Code |
+| **Last Tool Used** | Cursor |
 | **Vercel URL** | https://carepath-five.vercel.app |
 | **GitHub Repo** | https://github.com/TarunYadgirkar/carepath |
 
@@ -155,6 +155,62 @@
 
 ---
 
+### Phase 6 — Grok Voice TTS (Hybrid Voice Path) ⏱ ~30 min
+*Goal: Use xAI for actual voice output while Realtime API remains account-blocked.*
+
+**Status:** Done.
+
+**What was built:**
+- `src/app/api/tts/route.ts` — POST proxy to `https://api.x.ai/v1/tts` (voice `eve`, language `en`). Returns `audio/mpeg`. **Verified working** with rotated `XAI_API_KEY` (HTTP 200, valid mp3).
+- `src/data/voice-settings.ts` — single source of truth for voice agent settings (`ttsVoiceId`, `realtimeModel`, `voiceLabel`, etc.). Update here to change voice or model names.
+- `src/lib/grok-tts.ts` — client helper: `speakGrokTts()` plays `/api/tts` audio; falls back to browser `speechSynthesis` if TTS fails.
+- `src/hooks/useVoiceConversation.ts` — rewired to use Grok TTS for all CarePath spoken replies (not browser TTS). Fixed greeting flow: now fetches greeting from `/api/conversation` on start and speaks it before listening. Added `speakingText` for live "CarePath is speaking…" transcript. Improved listen/speak phase tracking with `listeningRef` to avoid race conditions.
+- `src/app/intake/page.tsx` — always-visible **Live transcript** panel (`aria-live="polite"`), status hints per phase, "Voice: Eve (Grok Voice)" badge, interim speech shown as `You: …` while listening.
+- `src/app/api/realtime-token/route.ts` — now imports model/voice from `voice-settings.ts` (ready when xAI enables Realtime).
+
+**Architecture (current voice path):**
+```
+Browser mic → Web Speech API (STT) → /api/conversation (gpt-4o-mini) → /api/tts (Grok Eve voice) → Audio playback
+                                                                                    ↓ (when done)
+                                                                              /api/classify → /card
+```
+
+**Notes / Blockers:**
+- `npm run type-check` and `npm run build` both pass (verified by Cursor 2026-06-13).
+- xAI **Realtime** (`/v1/realtime/sessions`) still 403 — not a key issue. When enabled, wire `useGrokVoice.ts` back into `/intake` (code already exists).
+- xAI **TTS** (`/v1/tts`) works with current key — no new key needed for voice output.
+- Live mic round-trip needs human test in Chrome/Edge on https://carepath-five.vercel.app/intake after deploy.
+
+---
+
+## Resume Guide (for Claude Code / next session)
+
+**Start here:**
+1. Read this file + `CLAUDE.md`
+2. `git pull` — latest should include Phase 6 Grok TTS commit
+3. `npm run type-check && npm run build` before any deploy
+
+**What's working today:**
+- Demo path: `/intake` → Run Demo → `/card` (Urgent Care) — verified on production
+- Classify: real `gpt-4o-mini` on Vercel
+- Live conversation: browser STT + Grok TTS + gpt-4o-mini conversation brain
+
+**What needs human verification:**
+- Click "Start Live Conversation" on `/intake` in Chrome with mic — confirm you hear **Eve (Grok)** voice and see live transcript update
+
+**If Grok Realtime gets enabled on xAI console:**
+- Set intake to try `useGrokVoice` first, fall back to `useVoiceConversation`
+- Model already set to `grok-voice-think-fast-1.0` in `voice-settings.ts`
+
+**Open non-code items (user handles):**
+- Submission checklist (team name, pitch, URLs)
+
+**Do NOT:**
+- Commit `.env.local`
+- Modify `src/types/carepath.ts` without updating this file
+
+---
+
 ### Phase 4 — Deploy + Demo Prep ⏱ ~30 min
 *Goal: Live Vercel URL. End-to-end Maya Patel scenario runs clean.*
 
@@ -181,7 +237,7 @@
 
 ## Known Issues / Blockers
 
-- **xAI Realtime Voice API not authorized for this account.** Key was rotated (2026-06-13) and is now valid for `/v1/models` (lists `grok-4.20-0309-non-reasoning`, `grok-4.20-0309-reasoning`, `grok-4.20-multi-agent-0309`, `grok-4.3`, `grok-build-0.1`, `grok-imagine-*` — no realtime/voice models in the list). Re-checked 2026-06-13 against the **correct documented model names** (`grok-voice-think-fast-1.0`, `grok-voice-latest`, `grok-voice-fast-1.0` — per `docs.x.ai/developers/model-capabilities/audio/voice-agent`, the previously-used `grok-voice-think-fast-1.1` doesn't exist): `POST /v1/realtime/sessions` returns the identical `403 {"code":"The caller does not have permission to execute the specified operation","error":"Team is not authorized to perform this action."}` for **every** model tried (8 total across two sessions). Same error regardless of model name = account/team permission gap — the Voice Agent API is not enabled for this team in the xAI console, separate from general chat-model API access. **Fix requires xAI console action** (enable Voice Agent API / accept terms for the team, possibly separate billing) — not a new API key by itself, and not a code change. Code has been corrected to the right model name (`grok-voice-think-fast-1.0`, dropped unsupported `reasoning_effort`) so `useGrokVoice`/`/api/realtime-token` will work as soon as the team is enabled. **Resolved via Phase 5** in the meantime: live conversation uses the browser's Web Speech API + `gpt-4o-mini`, which works today without xAI Realtime.
+- **xAI Realtime Voice API not authorized for this account.** Key is valid for `/v1/models` and **`/v1/tts` (works — Eve voice returns mp3)**. Re-checked 2026-06-13: `POST /v1/realtime/sessions` returns `403` for all models (`grok-voice-think-fast-1.0`, `grok-2-realtime`, etc.) = team permission gap. **Workaround shipped in Phase 6:** browser STT + Grok TTS (`/api/tts`) + `gpt-4o-mini` conversation. Full speech-to-speech Realtime remains blocked until xAI enables Voice Agent API on the team — `useGrokVoice.ts` is ready to wire back in.
 - **OpenAI key verified working** (rotated 2026-06-13): `GET /v1/models/gpt-4o-mini` returns 200. `/api/classify` real pipeline confirmed working on Vercel production.
 
 ```
@@ -207,12 +263,15 @@ Status: unresolved / resolved by [what]
 | `src/mocks/demo-result.ts` | Pre-computed CarePathResult | Fallback classifier bypass |
 | `.claude/skills/grok-voice/SKILL.md` | Grok Voice integration guide | Read before touching voice code |
 | `.claude/skills/care-classifier/SKILL.md` | Classifier system prompt + parse guide | Read before touching /api/classify |
+| `src/data/voice-settings.ts` | Grok voice agent settings (TTS + Realtime) | Change voice/model here |
+| `src/lib/grok-tts.ts` | Client Grok TTS playback helper | Used by useVoiceConversation |
+| `src/app/api/tts/route.ts` | Grok TTS proxy (xAI /v1/tts) | Working with current XAI_API_KEY |
 
 ---
 
 ## Environment Variables Status
 
-- [x] `XAI_API_KEY` — set in Vercel environment variables (valid for chat models; Realtime API account-blocked, see Known Issues)
+- [x] `XAI_API_KEY` — set in Vercel (valid for `/v1/tts` Grok Voice; Realtime API account-blocked, see Known Issues)
 - [x] `OPENAI_API_KEY` — set in Vercel environment variables, verified working
 - [x] `.env.local` — created locally from `.env.example`
 
