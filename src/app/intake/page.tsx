@@ -48,7 +48,7 @@ export default function IntakePage() {
   }, [classify]);
 
   return (
-    <main className="flex flex-1 flex-col items-center gap-8 px-6 py-12 animate-fade-up">
+    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center gap-8 px-6 py-12 animate-fade-up">
       {/* Page header */}
       <div className="flex flex-col items-center gap-3 text-center stagger-1 animate-fade-up">
         <span

@@ -5,6 +5,7 @@ import { RiskSignalTags } from "./RiskSignalTags";
 import { CareOptionsTable } from "./CareOptionsTable";
 import { MedCard } from "./MedCard";
 import { CheckInScript } from "./CheckInScript";
+import { CommunitySuggestions } from "./CommunitySuggestions";
 
 export function CareCardView({ result }: { result: CarePathResult }) {
   return (
@@ -69,6 +70,14 @@ export function CareCardView({ result }: { result: CarePathResult }) {
       {/* 9 — What to bring */}
       <div className="animate-fade-up" style={{ animationDelay: "540ms" }}>
         <ListSection title="What to bring" items={result.whatToBring} />
+      </div>
+
+      {/* 10 — Peer-support communities (opt-in) */}
+      <div className="animate-fade-up" style={{ animationDelay: "600ms" }}>
+        <CommunitySuggestions
+          summary={result.patientSummary}
+          signals={result.riskSignals}
+        />
       </div>
     </div>
   );

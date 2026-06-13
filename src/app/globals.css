@@ -68,8 +68,10 @@
   --duration-normal: 240ms;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+/* Theme locked to dark for consistent demo + judging (was prefers-color-scheme).
+   To re-enable light, wrap this block in @media (prefers-color-scheme: dark). */
+:root {
+    color-scheme: dark;
     /* Backgrounds — deep cool near-black in dark */
     --background:        #0e1117;
     --surface:           #161b24;
@@ -122,7 +124,6 @@
     --shadow-sm:  0 2px 6px -1px rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.2);
     --shadow-md:  0 4px 16px -2px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.2);
   }
-}
 
 /* ─── Tailwind Theme Registration ──────────────────────────────────────── */
 
