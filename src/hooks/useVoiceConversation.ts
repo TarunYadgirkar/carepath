@@ -72,6 +72,8 @@ interface UseVoiceConversationResult {
   start: () => void;
   stop: () => void;
   reset: () => void;
+  muted: boolean;
+  toggleMute: () => void;
 }
 
 export function useVoiceConversation(
@@ -83,12 +85,14 @@ export function useVoiceConversation(
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [interimTranscript, setInterimTranscript] = useState("");
   const [speakingText, setSpeakingText] = useState<string | null>(null);
+  const [muted, setMuted] = useState(false);
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const messagesRef = useRef<ConversationMessage[]>([]);
   const activeRef = useRef(false);
   const turnHandledRef = useRef(false);
   const listeningRef = useRef(false);
+  const mutedRef = useRef(false);
 
   const cleanup = useCallback(() => {
     activeRef.current = false;
@@ -119,6 +123,10 @@ export function useVoiceConversation(
   const listenOnce = useCallback(() => {
     const recognition = recognitionRef.current;
     if (!activeRef.current || !recognition) return;
+    if (mutedRef.current) {
+      listeningRef.current = false;
+      return;
+    }
     turnHandledRef.current = false;
     listeningRef.current = true;
     setInterimTranscript("");
@@ -129,6 +137,17 @@ export function useVoiceConversation(
       // recognition may already be running
     }
   }, []);
+
+  const toggleMute = useCallback(() => {
+    mutedRef.current = !mutedRef.current;
+    setMuted(mutedRef.current);
+    if (mutedRef.current) {
+      listeningRef.current = false;
+      recognitionRef.current?.stop();
+    } else if (activeRef.current) {
+      listenOnce();
+    }
+  }, [listenOnce]);
 
   const speakAndContinue = useCallback(
     async (reply: string, done: boolean, summary: string | null, currentMessages: ConversationMessage[]) => {
@@ -221,6 +240,8 @@ export function useVoiceConversation(
     activeRef.current = true;
     turnHandledRef.current = false;
     listeningRef.current = false;
+    mutedRef.current = false;
+    setMuted(false);
 
     const recognition = new Ctor();
     recognition.continuous = false;
@@ -288,5 +309,5 @@ export function useVoiceConversation(
     void beginWithGreeting();
   }, [cleanup, handleUserTurn, listenOnce, speakAndContinue, mode]);
 
-  return { status, error, messages, interimTranscript, speakingText, start, stop, reset };
+  return { status, error, messages, interimTranscript, speakingText, start, stop, reset, muted, toggleMute };
 }

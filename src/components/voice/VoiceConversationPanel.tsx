@@ -68,6 +68,8 @@ export function VoiceConversationPanel({
   const start = useFallbackVoice ? fallbackVoice.start : grokVoice.start;
   const stop = useFallbackVoice ? fallbackVoice.stop : grokVoice.stop;
   const reset = useFallbackVoice ? fallbackVoice.reset : grokVoice.reset;
+  const muted = useFallbackVoice ? fallbackVoice.muted : grokVoice.muted;
+  const toggleMute = useFallbackVoice ? fallbackVoice.toggleMute : grokVoice.toggleMute;
   const messages = useFallbackVoice ? fallbackVoice.messages : grokVoice.messages;
 
   // Sync transcript scroll position to the newest message — this is DOM
@@ -140,18 +142,51 @@ export function VoiceConversationPanel({
         {/* CTA buttons */}
         <div className="flex flex-col items-center gap-3">
           {conversationActive ? (
-            <button
-              onClick={stop}
-              aria-label="End conversation"
-              className="min-h-[44px] min-w-[176px] rounded-full px-6 py-3 text-sm font-medium ring-1 transition-all duration-150 hover:opacity-80 active:scale-95"
-              style={{
-                background: "var(--surface-2)",
-                color: "var(--text-primary)",
-                borderColor: "var(--border-strong)",
-              }}
-            >
-              End Conversation
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <button
+                onClick={stop}
+                aria-label="End conversation"
+                className="min-h-[44px] min-w-[160px] rounded-full px-6 py-3 text-sm font-medium ring-1 transition-all duration-150 hover:opacity-80 active:scale-95"
+                style={{
+                  background: "var(--surface-2)",
+                  color: "var(--text-primary)",
+                  borderColor: "var(--border-strong)",
+                }}
+              >
+                End Conversation
+              </button>
+              <button
+                onClick={toggleMute}
+                aria-pressed={muted}
+                aria-label={muted ? "Unmute your microphone" : "Mute your microphone so CarePath keeps talking"}
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-full px-5 py-3 text-sm font-medium ring-1 transition-all duration-150 hover:opacity-80 active:scale-95"
+                style={
+                  muted
+                    ? { background: "var(--care-er-bg)", color: "var(--care-er-text)", borderColor: "var(--care-er-border)" }
+                    : { background: "var(--surface-2)", color: "var(--text-primary)", borderColor: "var(--border-strong)" }
+                }
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  {muted ? (
+                    <>
+                      <line x1="2" y1="2" x2="22" y2="22" />
+                      <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2" />
+                      <path d="M5 10v2a7 7 0 0 0 12 5" />
+                      <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33" />
+                      <path d="M9 9v3a3 3 0 0 0 5.12 2.12" />
+                      <line x1="12" y1="19" x2="12" y2="22" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                      <line x1="12" y1="19" x2="12" y2="22" />
+                    </>
+                  )}
+                </svg>
+                {muted ? "Unmute mic" : "Mute mic"}
+              </button>
+            </div>
           ) : (
             <button
               onClick={start}

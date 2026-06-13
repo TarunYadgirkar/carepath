@@ -21,6 +21,8 @@ interface UseGrokVoiceResult {
   start: () => Promise<void>;
   stop: () => void;
   reset: () => void;
+  muted: boolean;
+  toggleMute: () => void;
 }
 
 export function useGrokVoice(
@@ -32,10 +34,18 @@ export function useGrokVoice(
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<GrokTranscriptMessage[]>([]);
 
+  const [muted, setMuted] = useState(false);
+
   const wsRef = useRef<WebSocket | null>(null);
   const captureRef = useRef<AudioCapture | null>(null);
   const playbackRef = useRef<AudioPlaybackQueue | null>(null);
   const responseActiveRef = useRef(false);
+  const mutedRef = useRef(false);
+
+  const toggleMute = useCallback(() => {
+    mutedRef.current = !mutedRef.current;
+    setMuted(mutedRef.current);
+  }, []);
 
   const cleanup = useCallback(() => {
     captureRef.current?.stop();
@@ -63,6 +73,8 @@ export function useGrokVoice(
     setStatus("connecting");
     setError(null);
     setMessages([]);
+    mutedRef.current = false;
+    setMuted(false);
 
     try {
       const tokenRes = await fetch("/api/realtime-token", { method: "POST" });
@@ -129,7 +141,7 @@ export function useGrokVoice(
         ws.send(JSON.stringify({ type: "response.create" }));
 
         startAudioCapture((base64) => {
-          if (ws.readyState !== WebSocket.OPEN || ws.bufferedAmount > 1_000_000) return;
+          if (mutedRef.current || ws.readyState !== WebSocket.OPEN || ws.bufferedAmount > 1_000_000) return;
           ws.send(JSON.stringify({ type: "input_audio_buffer.append", audio: base64 }));
         })
           .then((capture) => {
@@ -249,5 +261,5 @@ export function useGrokVoice(
     }
   }, [cleanup, onConsultationEnd, mode, insurancePlanName]);
 
-  return { status, error, messages, start, stop, reset };
+  return { status, error, messages, start, stop, reset, muted, toggleMute };
 }
