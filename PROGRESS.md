@@ -14,10 +14,10 @@
 
 | Field | Value |
 |---|---|
-| **Current Phase** | Phase 3 — Done, starting Phase 4 |
+| **Current Phase** | Phase 4 — In progress |
 | **Last Updated** | 2026-06-13 |
 | **Last Tool Used** | Claude Code |
-| **Vercel URL** | Not deployed yet |
+| **Vercel URL** | https://carepath-five.vercel.app |
 | **GitHub Repo** | https://github.com/TarunYadgirkar/carepath |
 
 ---
@@ -139,15 +139,24 @@
 ### Phase 4 — Deploy + Demo Prep ⏱ ~30 min
 *Goal: Live Vercel URL. End-to-end Maya Patel scenario runs clean.*
 
-- [ ] `npm run build` passes with no TypeScript errors
-- [ ] Vercel deployment live — URL confirmed working
-- [ ] End-to-end demo run: Maya Patel scenario (live voice OR fallback)
-- [ ] Fallback mode confirmed working independently
-- [ ] GitHub repo public, all files committed
+- [x] `npm run build` passes with no TypeScript errors
+- [x] Vercel deployment live — URL confirmed working
+- [x] End-to-end demo run: Maya Patel scenario (live voice OR fallback)
+- [x] Fallback mode confirmed working independently
+- [x] GitHub repo public, all files committed
 - [ ] Submission checklist items ready (team name, one-line pitch, Vercel URL, GitHub URL)
 
-**Status:** Not started
-**Notes / Blockers:** —
+**Status:** Mostly done — deploy + fallback demo verified, submission checklist still open.
+
+**What was verified:**
+- Production URL: **https://carepath-five.vercel.app** (project `carepath`, team `taruns-projects-248def65`). Note: the per-deployment preview URLs (`carepath-<hash>-taruns-projects-248def65.vercel.app`) are behind Vercel SSO/login — use `carepath-five.vercel.app` for demos/judges, not the preview alias.
+- Latest deploy (`dpl_CEjdNaqW34jP5A3cgqEvn7Aiu2yU`, commit `0411a5e` / phase-3) is `READY` on `production`.
+- Ran the Maya Patel demo flow against production via Playwright: `/intake` → Run Demo Conversation → `/api/classify` (real `gpt-4o-mini` call, `OPENAI_API_KEY` confirmed working on Vercel) → `/card` → renders `Urgent Care` / medium confidence, matching the expected scenario result.
+- GitHub repo `https://github.com/TarunYadgirkar/carepath` is public, all phase-0 through phase-3 work committed and pushed.
+
+**Notes / Blockers:**
+- Submission checklist (team name, one-line pitch wording, final URL list) not yet assembled — needs input from the team for the hackathon submission form.
+- Live Grok Voice path still untested end-to-end (see Known Issues — `XAI_API_KEY` invalid locally; verify against the Vercel-configured key with `DEMO_MODE = false`).
 
 ---
 
