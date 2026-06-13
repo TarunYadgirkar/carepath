@@ -14,7 +14,7 @@
 
 | Field | Value |
 |---|---|
-| **Current Phase** | Phase 2 — Done, starting Phase 3 |
+| **Current Phase** | Phase 3 — Done, starting Phase 4 |
 | **Last Updated** | 2026-06-13 |
 | **Last Tool Used** | Claude Code |
 | **Vercel URL** | Not deployed yet |
@@ -115,13 +115,24 @@
 ### Phase 3 — Landing Page + Conversation Screen Polish ⏱ ~45 min
 *Goal: The full user journey feels like a product, not a prototype.*
 
-- [ ] Landing page — headline, subheadline, CTA button, disclaimer
-- [ ] Voice screen — visual voice indicator (orb or waveform), transcript display, end-conversation button
-- [ ] State flows correctly: landing → intake → card
-- [ ] Loading state between end-of-conversation and Care Card appearing
+- [x] Landing page — headline, subheadline, CTA button, disclaimer
+- [x] Voice screen — visual voice indicator (orb or waveform), transcript display, end-conversation button
+- [x] State flows correctly: landing → intake → card
+- [x] Loading state between end-of-conversation and Care Card appearing
 
-**Status:** Not started
-**Notes / Blockers:** —
+**Status:** Done.
+
+**What was built:**
+- `src/app/globals.css` — added `--accent`/`--accent-soft` teal design tokens (light + dark), `orb-pulse` keyframe (transform/opacity only), and a `prefers-reduced-motion` override that collapses all animations.
+- `src/components/VoiceOrb.tsx` — status-driven voice indicator (`idle`/`connecting`/`active`/`ended`/`error`): pulsing ring when active, spinner ring when connecting, color/label per status, `role="status"` for a11y.
+- `src/components/LoadingOverlay.tsx` — full-screen spinner overlay shown while `/api/classify` is in flight, between end-of-conversation and the Care Card appearing.
+- `src/app/page.tsx` — redesigned landing page: eyebrow label, large CarePath heading, radial gradient accent background, accent CTA button, "how it works" 3-step grid (voice → care level → cost), shared `SafetyDisclaimer`.
+- `src/app/intake/page.tsx` — accent-colored buttons, "Demo mode" badge in demo mode, `VoiceOrb` wired into the live-voice branch (replaces plain status text), `LoadingOverlay` shown during `classifying` for both demo and live paths.
+
+**Notes / Blockers:**
+- `npm run type-check` and `npm run build` both pass.
+- Verified via Playwright MCP: landing page renders new hero/steps, `/intake` demo button → loading overlay → `/card` (Urgent Care result) all render correctly.
+- Live-voice branch (`VoiceOrb` + start/stop) is implemented but still gated behind `DEMO_MODE = true` — untested live since `XAI_API_KEY` is invalid locally (see Known Issues).
 
 ---
 
@@ -142,7 +153,7 @@
 
 ## Known Issues / Blockers
 
-*None yet — update this section immediately when a blocker is encountered.*
+- **Local `XAI_API_KEY` invalid.** `curl https://api.x.ai/v1/models -H "Authorization: Bearer $XAI_API_KEY"` returns `{"code":"unauthenticated:bad-credentials"}` with the key in `.env.local`. Cannot verify the `grok-voice-think-fast-1.1` model name or test the live voice path locally. The Vercel-configured key may differ — test live voice (`DEMO_MODE = false` in `src/app/intake/page.tsx`) against the deployed app. If the model name is rejected, fall back to `grok-2-realtime` and drop `reasoning_effort` (see Phase 0 notes).
 
 ```
 [BLOCKER TEMPLATE]
