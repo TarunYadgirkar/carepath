@@ -12,6 +12,11 @@ export default function SignalPage() {
   const [result, setResult] = useState<SignalResult | null>(null);
   const [classifyError, setClassifyError] = useState<string | null>(null);
 
+  const handleReset = useCallback(() => {
+    setResult(null);
+    setClassifyError(null);
+  }, []);
+
   const classify = useCallback(async (transcript: string) => {
     setClassifying(true);
     setClassifyError(null);
@@ -79,7 +84,8 @@ export default function SignalPage() {
         <div className="animate-fade-up mx-auto flex w-full max-w-2xl flex-col gap-4">
           <SignalCardView result={result} />
           <button
-            onClick={() => setResult(null)}
+            type="button"
+            onClick={handleReset}
             className="self-center rounded-full px-6 py-3 text-sm font-semibold transition-all duration-[var(--duration-normal)] hover:scale-105 active:scale-95 min-h-[44px]"
             style={{
               border: "1px solid var(--border-strong)",

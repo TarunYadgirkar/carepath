@@ -6,6 +6,9 @@ type ModeAccent = "blue" | "green" | "purple" | "amber" | "teal";
 type Props = {
   href: string;
   badge: string;
+  /** Feature name — the card's primary title (e.g. "Triage") */
+  title: string;
+  /** Conversational question shown as a subhead below the title */
   headline: string;
   sub: string;
   accent: ModeAccent;
@@ -60,7 +63,7 @@ const ACCENT_MAP: Record<
   },
 };
 
-export function ModeCard({ href, badge, headline, sub, accent, icon, featured = false }: Props) {
+export function ModeCard({ href, badge, title, headline, sub, accent, icon, featured = false }: Props) {
   const a = ACCENT_MAP[accent];
 
   return (
@@ -73,7 +76,7 @@ export function ModeCard({ href, badge, headline, sub, accent, icon, featured = 
         boxShadow: "var(--shadow-sm)",
         borderLeft: `3px solid ${a.lineColor}`,
       }}
-      aria-label={`${headline} — ${badge}`}
+      aria-label={`${title} — ${badge}`}
     >
       {/* Top row: icon + badge */}
       <div className="flex items-start justify-between gap-3">
@@ -96,14 +99,20 @@ export function ModeCard({ href, badge, headline, sub, accent, icon, featured = 
       </div>
 
       {/* Text */}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1">
         <h3
           className={`font-display leading-snug ${featured ? "text-xl" : "text-base"}`}
           style={{ color: "var(--text-primary)", fontWeight: 600 }}
         >
-          {headline}
+          {title}
         </h3>
-        <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
+        <p
+          className={`leading-snug ${featured ? "text-sm" : "text-xs"} font-medium`}
+          style={{ color: "var(--accent)" }}
+        >
+          {headline}
+        </p>
+        <p className="mt-0.5 text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
           {sub}
         </p>
       </div>

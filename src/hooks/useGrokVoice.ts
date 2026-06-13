@@ -20,6 +20,7 @@ interface UseGrokVoiceResult {
   messages: GrokTranscriptMessage[];
   start: () => Promise<void>;
   stop: () => void;
+  reset: () => void;
 }
 
 export function useGrokVoice(
@@ -48,6 +49,14 @@ export function useGrokVoice(
   const stop = useCallback(() => {
     cleanup();
     setStatus("ended");
+  }, [cleanup]);
+
+  const reset = useCallback(() => {
+    cleanup();
+    setStatus("idle");
+    setError(null);
+    setMessages([]);
+    responseActiveRef.current = false;
   }, [cleanup]);
 
   const start = useCallback(async () => {
@@ -112,6 +121,11 @@ export function useGrokVoice(
             },
           })
         );
+
+        // Ask the model to speak first — send an empty response.create so the
+        // assistant produces its opening greeting before the user says anything.
+        responseActiveRef.current = true;
+        ws.send(JSON.stringify({ type: "response.create" }));
 
         startAudioCapture((base64) => {
           if (ws.readyState !== WebSocket.OPEN || ws.bufferedAmount > 1_000_000) return;
@@ -208,5 +222,5 @@ export function useGrokVoice(
     }
   }, [cleanup, onConsultationEnd, mode, insurancePlanName]);
 
-  return { status, error, messages, start, stop };
+  return { status, error, messages, start, stop, reset };
 }

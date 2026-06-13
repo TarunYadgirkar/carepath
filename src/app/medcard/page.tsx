@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import type { MedCardResult } from "@/types/carepath";
-import { saveMedCard } from "@/lib/medcard";
+import { saveMedCard, clearMedCard } from "@/lib/medcard";
 import { SafetyDisclaimer } from "@/components/SafetyDisclaimer";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { VoiceConversationPanel } from "@/components/voice/VoiceConversationPanel";
@@ -15,6 +15,12 @@ export default function MedCardPage() {
   const [classifying, setClassifying] = useState(false);
   const [result, setResult] = useState<MedCardResult | null>(null);
   const [classifyError, setClassifyError] = useState<string | null>(null);
+
+  const handleReset = useCallback(() => {
+    clearMedCard();
+    setResult(null);
+    setClassifyError(null);
+  }, []);
 
   const classify = useCallback(async (transcript: string) => {
     setClassifying(true);
@@ -77,7 +83,7 @@ export default function MedCardPage() {
           <div className="flex flex-wrap justify-center gap-3 py-2">
             <DownloadMedCardButton />
             <button
-              onClick={() => setResult(null)}
+              onClick={handleReset}
               style={{
                 border: "1px solid var(--border-strong)",
                 color: "var(--text-primary)",
@@ -100,9 +106,20 @@ export default function MedCardPage() {
               }}
               className="p-5 flex flex-col items-start gap-3"
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.15em]" style={{ color: "var(--text-subtle)" }}>
-                Import records
-              </p>
+              <div className="flex w-full items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em]" style={{ color: "var(--text-subtle)" }}>
+                  Import records
+                </p>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="text-xs transition-opacity duration-[var(--duration-fast)] hover:opacity-70 focus-visible:outline-2"
+                  style={{ color: "var(--text-subtle)" }}
+                  aria-label="Clear saved MedCard data and start over"
+                >
+                  Clear saved data
+                </button>
+              </div>
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                 Connect your Epic MyChart to pre-fill your medications, allergies, and conditions.
               </p>

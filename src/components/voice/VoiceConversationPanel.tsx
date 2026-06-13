@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isVoiceConversationSupported, useVoiceConversation } from "@/hooks/useVoiceConversation";
 import { useGrokVoice } from "@/hooks/useGrokVoice";
 import { CAREPATH_VOICE_SETTINGS } from "@/data/voice-settings";
@@ -44,6 +44,7 @@ export function VoiceConversationPanel({
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [grokSupported, setGrokSupported] = useState(false);
   const [useFallbackVoice, setUseFallbackVoice] = useState(false);
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const voice = isVoiceConversationSupported();
@@ -66,7 +67,14 @@ export function VoiceConversationPanel({
   const error = useFallbackVoice ? fallbackVoice.error : grokVoice.error;
   const start = useFallbackVoice ? fallbackVoice.start : grokVoice.start;
   const stop = useFallbackVoice ? fallbackVoice.stop : grokVoice.stop;
+  const reset = useFallbackVoice ? fallbackVoice.reset : grokVoice.reset;
   const messages = useFallbackVoice ? fallbackVoice.messages : grokVoice.messages;
+
+  // Sync transcript scroll position to the newest message — this is DOM
+  // synchronization, not a state update, so useEffect is the correct tool.
+  useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const conversationActive =
     status === "connecting" || status === "listening" || status === "thinking" || status === "speaking";
@@ -157,6 +165,21 @@ export function VoiceConversationPanel({
               }}
             >
               Start Live Conversation
+            </button>
+          )}
+
+          {(status === "ended" || (status !== "idle" && !conversationActive) || messages.length > 0) && (
+            <button
+              onClick={reset}
+              aria-label="Reset and start over"
+              className="min-h-[36px] rounded-full px-5 py-1.5 text-xs font-medium ring-1 transition-all duration-150 hover:opacity-80 active:scale-95"
+              style={{
+                background: "var(--surface-2)",
+                color: "var(--text-muted)",
+                borderColor: "var(--border)",
+              }}
+            >
+              Reset / start over
             </button>
           )}
 
@@ -257,6 +280,7 @@ export function VoiceConversationPanel({
                     <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
                   </div>
                 ))}
+                <div ref={transcriptEndRef} aria-hidden="true" />
               </div>
             ) : (
               <p className="text-sm" style={{ color: "var(--text-subtle)" }}>

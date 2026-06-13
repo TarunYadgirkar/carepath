@@ -10,9 +10,9 @@ export function InsurancePlanSelector({ value, onChange, disabled }: Props) {
   const planKeys = Object.keys(syntheticPricing.plans);
 
   return (
-    <fieldset className="flex w-full flex-col items-center gap-2.5" disabled={disabled}>
+    <fieldset className="flex w-full flex-col items-center gap-4" disabled={disabled}>
       <legend
-        className="text-[10px] font-semibold uppercase tracking-widest"
+        className="mb-1 text-[10px] font-semibold uppercase tracking-widest"
         style={{ color: "var(--text-subtle)" }}
       >
         Insurance plan

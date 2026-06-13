@@ -2,17 +2,13 @@ export function SafetyDisclaimer() {
   return (
     <aside
       aria-label="Safety information"
-      className="flex w-full max-w-md flex-col gap-2 rounded-xl px-4 py-3 ring-1"
-      style={{
-        background: "var(--surface-2)",
-        borderColor: "var(--border)",
-      }}
+      className="flex w-full flex-col items-center gap-1.5 text-center"
     >
-      <div className="flex items-start gap-2.5">
+      <div className="flex items-start justify-center gap-2">
         <svg
           aria-hidden="true"
-          className="mt-0.5 h-4 w-4 shrink-0"
-          style={{ color: "var(--text-muted)" }}
+          className="mt-0.5 h-3.5 w-3.5 shrink-0"
+          style={{ color: "var(--text-subtle)" }}
           viewBox="0 0 20 20"
           fill="currentColor"
         >
@@ -22,15 +18,15 @@ export function SafetyDisclaimer() {
             clipRule="evenodd"
           />
         </svg>
-        <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          <span className="font-medium" style={{ color: "var(--text-primary)" }}>
+        <p className="text-xs leading-relaxed" style={{ color: "var(--text-subtle)" }}>
+          <span className="font-medium" style={{ color: "var(--text-muted)" }}>
             CarePath is a navigation tool, not a diagnosis system.
           </span>{" "}
           If you are experiencing an emergency — trouble breathing, chest pain, loss of
           consciousness — call 911 immediately.
         </p>
       </div>
-      <p className="pl-6 text-xs leading-relaxed" style={{ color: "var(--text-subtle)" }}>
+      <p className="text-xs leading-relaxed" style={{ color: "var(--text-subtle)" }}>
         Your records, medications, and care cards are stored only in your browser — never on a
         server or database, and never shared without you choosing to.
       </p>

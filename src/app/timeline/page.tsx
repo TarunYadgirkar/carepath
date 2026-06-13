@@ -7,6 +7,7 @@ import {
   getSymptomLog,
   addSymptomEntry,
   removeSymptomEntry,
+  clearSymptomLog,
   type SymptomEntry,
   type SymptomLog,
 } from "@/lib/symptom-log";
@@ -263,6 +264,11 @@ export default function TimelinePage() {
     window.dispatchEvent(new Event("storage"));
   }, []);
 
+  const handleClearAll = useCallback(() => {
+    clearSymptomLog();
+    window.dispatchEvent(new Event("storage"));
+  }, []);
+
   const sevStyle = severity > 0 ? severityStyle(severity) : null;
 
   return (
@@ -471,9 +477,22 @@ export default function TimelinePage() {
 
       {/* Symptom log */}
       <section aria-labelledby="log-heading" className="flex flex-col gap-6 animate-fade-up stagger-2">
-        <h2 id="log-heading" className="sr-only">
-          Symptom log
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 id="log-heading" className="sr-only">
+            Symptom log
+          </h2>
+          {groups.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearAll}
+              className="ml-auto text-xs transition-opacity duration-[var(--duration-fast)] hover:opacity-70 focus-visible:outline-2"
+              style={{ color: "var(--text-subtle)" }}
+              aria-label="Clear all symptom log entries"
+            >
+              Clear all entries
+            </button>
+          )}
+        </div>
 
         {groups.length === 0 ? (
           <EmptyState />

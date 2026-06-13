@@ -6,6 +6,7 @@ import { SafetyDisclaimer } from "@/components/SafetyDisclaimer";
 import { ConnectHealthRecordsButton } from "@/components/epic/ConnectHealthRecordsButton";
 import { ModeCard } from "@/components/hub/ModeCard";
 import { getMedCard } from "@/lib/medcard";
+import type { MedCardData } from "@/lib/medcard";
 
 /* ── Mode definitions ──────────────────────────────────────────────────── */
 
@@ -13,7 +14,8 @@ const MODES = [
   {
     href: "/intake",
     badge: "Pre-Visit",
-    headline: "Don't know where to go?",
+    title: "Triage",
+    headline: "Don’t know where to go?",
     sub: "Describe your symptoms. Get a care recommendation and cost estimate.",
     accent: "blue" as const,
     featured: true,
@@ -27,6 +29,7 @@ const MODES = [
   {
     href: "/debrief",
     badge: "Post-Visit",
+    title: "Debrief",
     headline: "Just left the doctor?",
     sub: "Describe what you were told. Get a plain-language explanation and next steps.",
     accent: "green" as const,
@@ -39,6 +42,7 @@ const MODES = [
   {
     href: "/medcard",
     badge: "Ongoing",
+    title: "MedCard",
     headline: "Know your medications",
     sub: "Speak your medications and allergies. Get a shareable card and interaction check.",
     accent: "purple" as const,
@@ -52,6 +56,7 @@ const MODES = [
   {
     href: "/signal",
     badge: "Ongoing",
+    title: "Check-in",
     headline: "How have you been feeling?",
     sub: "A short voice check-in. CarePath notes what to bring up with your provider.",
     accent: "teal" as const,
@@ -65,7 +70,8 @@ const MODES = [
   {
     href: "/timeline",
     badge: "Ongoing",
-    headline: "Symptom timeline",
+    title: "Timeline",
+    headline: "Track symptoms over time",
     sub: "Log symptoms and events over time. Your history is available when you run a check-in.",
     accent: "amber" as const,
     icon: (
@@ -82,22 +88,27 @@ const MODES = [
 
 const TRUST_SIGNALS = [
   { label: "Voice-first", desc: "Talk naturally — no forms to fill" },
-  { label: "Private by design", desc: "Nothing leaves your device" },
+  {
+    label: "Private by design",
+    desc: "Your symptoms, medications, and records stay in your browser — never sent to a server or shared.",
+  },
   { label: "Clear next step", desc: "A ranked care option with cost estimate" },
 ];
 
 /* ── Page ────────────────────────────────────────────────────────────── */
 
+function hasMedCardData(data: MedCardData | null): boolean {
+  return Boolean(
+    data && (data.medications.length || data.allergies.length || data.conditions.length),
+  );
+}
+
 export default function Home() {
-  const [hasMedCard, setHasMedCard] = useState(false);
+  const [medCardExists, setMedCardExists] = useState(false);
 
   useEffect(() => {
-    const medCard = getMedCard();
-    const has = Boolean(
-      medCard &&
-        (medCard.medications.length || medCard.allergies.length || medCard.conditions.length),
-    );
-    queueMicrotask(() => setHasMedCard(has));
+    const data = getMedCard();
+    queueMicrotask(() => setMedCardExists(hasMedCardData(data)));
   }, []);
 
   return (
@@ -124,9 +135,9 @@ export default function Home() {
           className="font-display animate-fade-up stagger-2 max-w-2xl text-5xl leading-[1.08] sm:text-6xl lg:text-7xl"
           style={{ color: "var(--text-primary)", fontWeight: 600, letterSpacing: "-0.02em" }}
         >
-          Tell it what&apos;s wrong.
-          <br />
-          <span style={{ color: "var(--accent)" }}>It tells you where to go.</span>
+          Know your{" "}
+          <span style={{ color: "var(--accent)" }}>next step</span>
+          {" "}in care.
         </h1>
 
         {/* Sub-headline — Geist, muted, breathing room */}
@@ -134,7 +145,7 @@ export default function Home() {
           className="animate-fade-up stagger-3 mt-6 max-w-lg text-lg leading-relaxed"
           style={{ color: "var(--text-muted)" }}
         >
-          Describe your symptoms, meds, and insurance once. CarePath shows you where to go and what it may cost.
+          Describe your symptoms, medications, and insurance once &mdash; CarePath points you to the right level of care and what it may cost.
         </p>
 
         {/* CTA cluster */}
@@ -160,21 +171,35 @@ export default function Home() {
           <ConnectHealthRecordsButton />
         </div>
 
-        {/* Med-card status pill */}
-        {hasMedCard && (
-          <div className="mt-3 animate-fade-in">
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
-              style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
-            >
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M3 5l1.5 1.5L7 3.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Medications on file
-            </span>
-          </div>
-        )}
+        {/* Med-card action pill — always a link to /medcard */}
+        <div className="mt-3 animate-fade-in">
+          <Link
+            href="/medcard"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-medium transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            style={{
+              background: "var(--accent-soft)",
+              color: "var(--accent)",
+              outlineColor: "var(--accent)",
+            }}
+          >
+            {medCardExists ? (
+              <>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                  <circle cx="5" cy="5" r="4" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M3 5l1.5 1.5L7 3.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Medications on file &mdash; manage
+              </>
+            ) : (
+              <>
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                  <path d="M5 2v6M2 5h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                Add your medications
+              </>
+            )}
+          </Link>
+        </div>
       </section>
 
       {/* ── Trust signal strip ─────────────────────────────────────────────── */}
@@ -253,12 +278,7 @@ export default function Home() {
 
       {/* ── Safety disclaimer ─────────────────────────────────────────────── */}
       <footer className="w-full max-w-4xl px-6 pb-16 pt-4">
-        <div
-          className="rounded-2xl border p-6"
-          style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}
-        >
-          <SafetyDisclaimer />
-        </div>
+        <SafetyDisclaimer />
       </footer>
     </main>
   );

@@ -71,6 +71,7 @@ interface UseVoiceConversationResult {
   speakingText: string | null;
   start: () => void;
   stop: () => void;
+  reset: () => void;
 }
 
 export function useVoiceConversation(
@@ -101,6 +102,18 @@ export function useVoiceConversation(
   const stop = useCallback(() => {
     cleanup();
     setStatus("ended");
+  }, [cleanup]);
+
+  const reset = useCallback(() => {
+    cleanup();
+    setStatus("idle");
+    setError(null);
+    setMessages([]);
+    setInterimTranscript("");
+    setSpeakingText(null);
+    messagesRef.current = [];
+    turnHandledRef.current = false;
+    listeningRef.current = false;
   }, [cleanup]);
 
   const listenOnce = useCallback(() => {
@@ -275,5 +288,5 @@ export function useVoiceConversation(
     void beginWithGreeting();
   }, [cleanup, handleUserTurn, listenOnce, speakAndContinue, mode]);
 
-  return { status, error, messages, interimTranscript, speakingText, start, stop };
+  return { status, error, messages, interimTranscript, speakingText, start, stop, reset };
 }

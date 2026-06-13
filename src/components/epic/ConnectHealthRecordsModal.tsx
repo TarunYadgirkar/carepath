@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { EPIC_FHIR_MOCK, EPIC_SYSTEMS, type EpicSystem } from "@/data/epic-mock";
 import { saveEpicImport } from "@/lib/epic-import";
@@ -18,10 +19,64 @@ export function ConnectHealthRecordsModal({ onClose }: Props) {
   const [step, setStep] = useState<Step>("select");
   const [system, setSystem] = useState<EpicSystem | null>(null);
   const [search, setSearch] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const filteredSystems = EPIC_SYSTEMS.filter((sys) =>
     sys.name.toLowerCase().includes(search.trim().toLowerCase())
   );
+
+  useEffect(() => {
+    queueMicrotask(() => setMounted(true));
+    previousFocusRef.current = document.activeElement as HTMLElement;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      previousFocusRef.current?.focus();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    closeBtnRef.current?.focus();
+  }, [mounted]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key === "Tab") {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+        const focusable = dialog.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last?.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first?.focus();
+          }
+        }
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   useEffect(() => {
     if (step !== "connecting" || !system) return;
@@ -42,20 +97,32 @@ export function ConnectHealthRecordsModal({ onClose }: Props) {
     setStep("connecting");
   };
 
-  return (
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  if (!mounted) return null;
+
+  return createPortal(
     /* Backdrop */
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
       style={{ background: "rgba(0,0,0,0.55)" }}
+      onClick={handleBackdropClick}
+      aria-hidden="false"
     >
       {/* Modal card */}
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Connect Health Records"
         className="w-full max-w-sm animate-fade-up"
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderRadius: "var(--radius-2xl)",
-          boxShadow: "var(--shadow-md)",
+          boxShadow: "var(--shadow-lg)",
         }}
       >
         {/* ── SELECT ───────────────────────────────────────────────────────── */}
@@ -79,6 +146,18 @@ export function ConnectHealthRecordsModal({ onClose }: Props) {
               >
                 Connect Health Records
               </h2>
+              <button
+                ref={closeBtnRef}
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="ml-auto flex h-7 w-7 items-center justify-center rounded-full transition-opacity duration-[var(--duration-fast)] hover:opacity-70 focus-visible:outline-2"
+                style={{ color: "var(--text-muted)" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
             </div>
             <p className="mb-4 text-xs" style={{ color: "var(--text-muted)" }}>
               Select your health system — simulated SMART on FHIR, no real data sent.
@@ -168,7 +247,19 @@ export function ConnectHealthRecordsModal({ onClose }: Props) {
 
         {/* ── CONNECTING ───────────────────────────────────────────────────── */}
         {step === "connecting" && system && (
-          <div className="flex flex-col items-center gap-5 p-8 text-center">
+          <div className="relative flex flex-col items-center gap-5 p-8 text-center">
+            <button
+              ref={step === "connecting" ? closeBtnRef : undefined}
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full transition-opacity duration-[var(--duration-fast)] hover:opacity-70 focus-visible:outline-2"
+              style={{ color: "var(--text-muted)" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
             <div
               className="flex h-14 w-14 items-center justify-center rounded-full"
               style={{ background: "var(--accent-soft)" }}
@@ -210,7 +301,19 @@ export function ConnectHealthRecordsModal({ onClose }: Props) {
 
         {/* ── SUCCESS ──────────────────────────────────────────────────────── */}
         {step === "success" && system && (
-          <div className="flex flex-col items-center gap-4 p-8 text-center">
+          <div className="relative flex flex-col items-center gap-4 p-8 text-center">
+            <button
+              ref={step === "success" ? closeBtnRef : undefined}
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full transition-opacity duration-[var(--duration-fast)] hover:opacity-70 focus-visible:outline-2"
+              style={{ color: "var(--text-muted)" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
             {/* Check icon */}
             <div
               className="flex h-14 w-14 items-center justify-center rounded-full"
@@ -242,11 +345,11 @@ export function ConnectHealthRecordsModal({ onClose }: Props) {
                 Records imported from {system.name}
               </h2>
               <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-                {EPIC_FHIR_MOCK.medications.length} medications ·{" "}
+                {EPIC_FHIR_MOCK.medications.length} medications &middot;{" "}
                 {EPIC_FHIR_MOCK.allergies.length} allerg
-                {EPIC_FHIR_MOCK.allergies.length === 1 ? "y" : "ies"} ·{" "}
-                {EPIC_FHIR_MOCK.conditions.length} conditions ·{" "}
-                {EPIC_FHIR_MOCK.labResults.length} lab results ·{" "}
+                {EPIC_FHIR_MOCK.allergies.length === 1 ? "y" : "ies"} &middot;{" "}
+                {EPIC_FHIR_MOCK.conditions.length} conditions &middot;{" "}
+                {EPIC_FHIR_MOCK.labResults.length} lab results &middot;{" "}
                 {EPIC_FHIR_MOCK.recentEncounters.length} recent visits
               </p>
             </div>
@@ -279,6 +382,7 @@ export function ConnectHealthRecordsModal({ onClose }: Props) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
