@@ -58,7 +58,7 @@ export default function SignalPage() {
           How are you feeling?
         </h1>
         <p className="max-w-md text-base leading-relaxed" style={{ color: "var(--text-muted)" }}>
-          A short voice check-in on how you&apos;ve been feeling. CarePath notes what to bring up
+          A short, private voice check-in. CarePath notes what to bring up
           with your provider — it does not diagnose or treat.
         </p>
       </div>
