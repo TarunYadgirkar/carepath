@@ -62,10 +62,10 @@ export default function MedCardPage() {
           <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
             <circle cx="5" cy="5" r="5" />
           </svg>
-          Ongoing · MedCard
+          Ongoing
         </span>
         <h1 className="font-display text-3xl font-semibold tracking-tight" style={{ color: "var(--text-primary)" }}>
-          CarePath MedCard
+          Your medications, organized
         </h1>
         <p className="max-w-sm text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
           Speak your medications, dosages, allergies, and conditions. CarePath screens for potential

@@ -49,13 +49,13 @@ export default function SignalPage() {
             border: "1px solid var(--care-urgent-border)",
           }}
         >
-          Ongoing · Signal
+          Ongoing
         </span>
         <h1
           className="font-display text-4xl leading-tight"
           style={{ color: "var(--text-primary)" }}
         >
-          CarePath Signal
+          How are you feeling?
         </h1>
         <p className="max-w-md text-base leading-relaxed" style={{ color: "var(--text-muted)" }}>
           A short voice check-in on how you&apos;ve been feeling. CarePath notes what to bring up

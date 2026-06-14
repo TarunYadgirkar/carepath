@@ -59,13 +59,13 @@ export default function IntakePage() {
             border: "1px solid var(--care-primary-border)",
           }}
         >
-          Pre-Visit · Triage
+          Pre-Visit
         </span>
         <h1
           className="font-display text-3xl font-semibold leading-tight tracking-tight"
           style={{ color: "var(--text-primary)" }}
         >
-          CarePath Intake
+          Not sure where to go?
         </h1>
         <p className="max-w-sm text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
           Describe what&apos;s going on. CarePath will suggest your next care step.

@@ -54,13 +54,13 @@ export default function DebriefPage() {
             border: "1px solid var(--care-self-border)",
           }}
         >
-          Post-Visit · Debrief
+          Post-Visit
         </span>
         <h1
           className="font-display text-4xl leading-tight"
           style={{ color: "var(--text-primary)" }}
         >
-          CarePath Debrief
+          Just left the doctor?
         </h1>
         <p className="max-w-md text-base leading-relaxed" style={{ color: "var(--text-muted)" }}>
           Just left an appointment? Describe what your doctor told you and get a plain-language
