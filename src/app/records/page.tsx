@@ -7,6 +7,7 @@ import {
   getEpicImport,
   saveEpicImport,
   clearEpicImport,
+  RECORDS_CHANGED_EVENT,
   type EpicImportState,
 } from "@/lib/epic-import";
 import { SafetyDisclaimer } from "@/components/SafetyDisclaimer";
@@ -26,7 +27,21 @@ function _notify() {
 
 function subscribe(cb: () => void) {
   _listeners.add(cb);
-  return () => _listeners.delete(cb);
+  // Refresh when records change anywhere (e.g. the Epic import modal), not just
+  // via this page's own actions.
+  const onExternalChange = () => {
+    _cachedSnapshot = undefined;
+    cb();
+  };
+  if (typeof window !== "undefined") {
+    window.addEventListener(RECORDS_CHANGED_EVENT, onExternalChange);
+  }
+  return () => {
+    _listeners.delete(cb);
+    if (typeof window !== "undefined") {
+      window.removeEventListener(RECORDS_CHANGED_EVENT, onExternalChange);
+    }
+  };
 }
 
 function getSnapshot(): Snapshot {

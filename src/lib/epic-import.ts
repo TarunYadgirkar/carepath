@@ -11,6 +11,15 @@ export interface EpicImportState {
 
 const EPIC_IMPORT_KEY = "carepath-epic-import";
 
+/** Fired after the imported records change so views (e.g. /records) can refresh live. */
+export const RECORDS_CHANGED_EVENT = "carepath:records-changed";
+
+function notifyRecordsChanged(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(RECORDS_CHANGED_EVENT));
+  }
+}
+
 export function getEpicImport(): EpicImportState | null {
   if (typeof window === "undefined") return null;
   try {
@@ -31,6 +40,7 @@ export function saveEpicImport(systemId: string, systemName: string): EpicImport
   };
   if (typeof window !== "undefined") {
     localStorage.setItem(EPIC_IMPORT_KEY, JSON.stringify(state));
+    notifyRecordsChanged();
   }
   return state;
 }
@@ -38,6 +48,7 @@ export function saveEpicImport(systemId: string, systemName: string): EpicImport
 export function clearEpicImport(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(EPIC_IMPORT_KEY);
+  notifyRecordsChanged();
 }
 
 export function buildEpicContext(state: EpicImportState | null): string {
